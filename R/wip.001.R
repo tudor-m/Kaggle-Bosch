@@ -1,6 +1,8 @@
 library(data.table)
+library(xgboost)
+source("futil.R")
 
-nLoadRows = 200
+nLoadRows = 200000
 
 train.num = fread('../data/train_numeric.csv',header = TRUE,nrows = nLoadRows)
 train.cat = fread('../data/train_categorical.csv',header = TRUE,nrows = nLoadRows)
@@ -9,3 +11,89 @@ train.dat = fread('../data/train_date.csv',header = TRUE,nrows = nLoadRows)
 test.num = fread('../data/test_numeric.csv',header = TRUE,nrows = nLoadRows)
 test.cat = fread('../data/test_categorical.csv',header = TRUE,nrows = nLoadRows)
 test.dat = fread('../data/test_date.csv',header = TRUE,nrows = nLoadRows)
+
+
+#"QnD" solution : ("quick and dirty")
+# replace NA with 0 - not needed because xboost handles NAs
+# arrind = which(is.na(train.num),arr.ind=T)
+# train.num[arrind] = 0
+
+
+#SPLIT train in development (80%) and cross-validation (20%)
+devInd = 1:round(0.8*nrow(train.num))
+cvInd = (1+last(devInd)):nrow(train.num)
+dev.num = train.num[devInd,]
+cv.num = train.num[cvInd,]
+
+
+# FIT on dev ...
+dtrain <- xgb.DMatrix(data = as.matrix(dev.num[,-"Response",with=F]), label=dev.num$Response, missing = NA)
+dtest <- xgb.DMatrix(data = as.matrix(cv.num), label=cv.num$Response , missing = NA)
+
+watchlist <- list(train = dtrain, test = dtest)
+log1pEval <- function(preds, dtrain)
+{
+  labels = getinfo(dtrain, "label")
+  preds[which(preds<0)] = 0
+  logs = (log1p(preds)-log1p(labels))^2
+  err = as.numeric(sqrt(mean(logs,na.rm = TRUE)))
+  return(list(metric="error",value=err))
+}
+
+for (min_child_w in 5:5) {
+  for (max_d in 22) {
+    print(c("max_d: ",max_d))
+    #print(c("fmla= ",fmla_c))
+    print(c("min_child_weight: ",min_child_w))
+    
+    
+    nround = 70
+    param <- list(  
+      #objective           = "multi:softprob", num_class = 4,
+      objective           = "reg:linear",
+      booster             = "gbtree",
+      #booster             = "gblinear",
+      base_score          = 0.5,
+      eta                 = 0.025,#0.05, #0.02, # 0.06, #0.01,
+      max_depth           = max_d, #changed from default of 8
+      subsample           = 0.5, #0.9, # 0.7
+      colsample_bytree    = 0.5, # 0.7
+      #num_parallel_tree   = 2,
+      nthread = 4,
+      alpha = 0,    #0.0001,
+      lambda = 0,
+      gamma = 0,
+      scale_pos_weight = 1,
+      min_child_weight    = min_child_w, #4, #4
+      #eval_metric         = log1pEval,
+      eval_metric         = "rmse",
+      early_stopping_rounds    = 2,
+      maximize = FALSE
+    )
+    
+    if (1==0) {
+      set.seed(100)
+      fit.cv.res = xgb.cv(param, dtrain,nrounds = nround,nfold = 5,metrics = "error",showsd = FALSE,prediction = TRUE)
+    }
+    
+    set.seed(100)
+    fit.dev = xgb.train(params=param,dtrain,nrounds=nround,print.every.n = 2,maximize = FALSE,watchlist)
+    if (1==0) {
+      xgb.plot.importance(xgb.importance(model=fit.train))
+      head(xgb.importance(model=fit.train))
+    }
+    # saveDataT(fit.train,DATA_SET,paste(as.character(c("fit.train",".",jBin,".",jj)),collapse = ""))
+    # PREDICT on cv ...
+    pred_cv = predict(fit.dev, as.matrix(cv.num),missing = NA)
+    #pred_test[which(pred_test<0)] = 0
+    err_pred_cv = errMeasure3(pred_cv,cv.num$Response )
+    if (VERBOSE == 1){
+      print(err_pred_cv)
+    }
+    #pred_test_xgb[[jj]] = pred_cv
+    #err_pred_test_xgb[[jj]] = err_pred_cv
+  }
+  
+}
+
+
