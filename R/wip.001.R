@@ -2,8 +2,10 @@ library(data.table)
 library(xgboost)
 source("futil.R")
 
-nLoadRows = 200000
+nLoadRows = 400000
 VERBOSE = 1
+sink(file="output.R.txt",append = TRUE, split=TRUE)
+timestamp()
 
 train.num = fread('../data/train_numeric.csv',header = TRUE,nrows = nLoadRows)
 
@@ -36,23 +38,21 @@ dtrain <- xgb.DMatrix(data = as.matrix(dev.num[,-"Response",with=F]), label=dev.
 dtest <- xgb.DMatrix(data = as.matrix(cv.num), label=cv.num$Response , missing = NA)
 
 watchlist <- list(train = dtrain, test = dtest)
-log1pEval <- function(preds, dtrain)
+mccEval <- function(preds, dtrain)
 {
   labels = getinfo(dtrain, "label")
-  preds[which(preds<0)] = 0
-  logs = (log1p(preds)-log1p(labels))^2
-  err = as.numeric(sqrt(mean(logs,na.rm = TRUE)))
+  err = as.numeric(errMeasure4(preds,labels,0.5))
   return(list(metric="error",value=err))
 }
 
-for (min_child_w in 5:5) {
-  for (max_d in 22) {
+for (min_child_w in 9:9) {
+  for (max_d in 9:9) {
     print(c("max_d: ",max_d))
     #print(c("fmla= ",fmla_c))
     print(c("min_child_weight: ",min_child_w))
     
     
-    nround = 70
+    nround = 80
     param <- list(  
       #objective           = "multi:softprob", num_class = 4,
       objective           = "reg:linear",
@@ -70,10 +70,10 @@ for (min_child_w in 5:5) {
       gamma = 0,
       scale_pos_weight = 1,
       min_child_weight    = min_child_w, #4, #4
-      #eval_metric         = log1pEval,
-      eval_metric         = "rmse",
+      eval_metric         = mccEval,
+      #eval_metric         = "rmse",
       early_stopping_rounds    = 2,
-      maximize = FALSE
+      maximize = TRUE
     )
     
     if (1==0) {
@@ -91,7 +91,7 @@ for (min_child_w in 5:5) {
     # PREDICT on cv ...
     pred_cv = predict(fit.dev, as.matrix(cv.num),missing = NA)
     #pred_test[which(pred_test<0)] = 0
-    err_pred_cv = errMeasure4(pred_cv,cv.num$Response,0.5)
+    err_pred_cv = errMeasure4(pred_cv,cv.num$Response,0.25)
     if (VERBOSE == 1){
       print(err_pred_cv)
     }
@@ -108,7 +108,7 @@ if (1 == 0)
 }
 
 
-if ( 1==0)
+if ( 1==1)
 {
 # Use the model to produce a dirty submission:
 rm(train.num)
@@ -118,18 +118,23 @@ test.num = fread('../data/test_numeric.csv',header = TRUE)
 pred_test = predict(fit.dev,as.matrix(test.num),missing = NA)
 
 # prepare the submission file
-thr = 0.5
+thr = 0.25
 pred_test_submission = pred_test
 pred_test_submission[which(pred_test <= thr)] = 0
 pred_test_submission[which(pred_test >  thr)] = 1
 
+predData   = as.data.table(cbind(test.num$Id,pred_test))
+setnames(predData,c("Id","Response"))
 submitData = as.data.table(cbind(test.num$Id,pred_test_submission))
 setnames(submitData,c("Id","Response"))
 options(scipen = 999)
 if (1==1)
-  write.csv(submitData[,.(Id,Response)],"submit.qnd.001.csv", row.names = FALSE)
+{
+  write.csv(predData[,.(Id,Response)],"pred.qnd.002.csv", row.names = FALSE)
+  write.csv(submitData[,.(Id,Response)],"submit.qnd.002.csv", row.names = FALSE)
+}
 options(scipen = 0)
 }
 
-
+sink()
 

@@ -21,14 +21,14 @@ errMeasure3 <- function (vPred, vTarget)
 
 errMeasure4 <- function (vPred, vTarget, threshold)
 {
-  # Mtahew correlation coefficient
+  # Mathew Correlation Coefficient
   vPred[which(vPred <= threshold)] = 0
   vPred[which(vPred > threshold)] = 1
   
   TP = sum((vTarget == 1 & vPred == 1))
   TN = sum((vTarget == 0 & vPred == 0))
   FP = sum((vTarget == 0 & vPred == 1))
-  FN = sum((vTarget == 1 & vPred == 1))
+  FN = sum((vTarget == 1 & vPred == 0))
   return((TP*TN-FP*FN)/(sqrt(TP+FP)*sqrt(TP+FN)*sqrt(TN+FP)*sqrt(TN+FN)))
 }
 
