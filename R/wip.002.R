@@ -2,21 +2,18 @@ library(data.table)
 library(xgboost)
 source("futil.R")
 
-nLoadRows = 400000
-VERBOSE = 1
-sink(file="output.R.txt",append = TRUE, split=TRUE)
-timestamp()
-
 if (1 == 0) #run only once
 {
   train.num = fread('../data/train_numeric.csv',header = TRUE)
   trainTargetData = as.data.table(cbind(train.num$Id,train.num$Response))
   setnames(trainTargetData,c("Id","Response"))
   write.csv(trainTargetData[,.(Id,Response)],"../data/train_response.csv", row.names = FALSE)
+  remove(train.num)
+  remove(trainTargetData)
 }
 
-
-train.num = fread('../data/train_numeric.csv',header = TRUE,nrows = nLoadRows)
+sink(file="output.R.txt",append = TRUE, split=TRUE)
+timestamp()
 
 if (1 == 0)
 {
@@ -34,17 +31,25 @@ if (1 == 0)
 # arrind = which(is.na(train.num),arr.ind=T)
 # train.num[arrind] = 0
 
+nLoadRows = 400000
+VERBOSE = 1
+
+train.target = fread('../data/train_response.csv',header = TRUE,nrows = nLoadRows)
+train.num = fread('../data/train_numeric.csv',header = TRUE,nrows = nLoadRows)
+
 
 #SPLIT train in development (80%) and cross-validation (20%)
 devInd = 1:round(0.5*nrow(train.num))
 cvInd = (1+last(devInd)):nrow(train.num)
+
 dev.num = train.num[devInd,]
 cv.num = train.num[cvInd,]
-
+dev.target = train.target[devInd]
+cv.target = train.target[cvInd]
 
 # FIT on dev ...
-dtrain <- xgb.DMatrix(data = as.matrix(dev.num[,-"Response",with=F]), label=dev.num$Response, missing = NA)
-dtest <- xgb.DMatrix(data = as.matrix(cv.num), label=cv.num$Response , missing = NA)
+dtrain <- xgb.DMatrix(data = as.matrix(dev.num[,-"Response",with=F]), label=dev.target$Response, missing = NA)
+dtest <- xgb.DMatrix(data = as.matrix(cv.num), label=cv.target$Response , missing = NA)
 
 watchlist <- list(train = dtrain, test = dtest)
 mccEval <- function(preds, dtrain)
