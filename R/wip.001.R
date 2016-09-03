@@ -3,14 +3,19 @@ library(xgboost)
 source("futil.R")
 
 nLoadRows = 200000
+VERBOSE = 1
 
 train.num = fread('../data/train_numeric.csv',header = TRUE,nrows = nLoadRows)
-train.cat = fread('../data/train_categorical.csv',header = TRUE,nrows = nLoadRows)
-train.dat = fread('../data/train_date.csv',header = TRUE,nrows = nLoadRows)
 
-test.num = fread('../data/test_numeric.csv',header = TRUE,nrows = nLoadRows)
-test.cat = fread('../data/test_categorical.csv',header = TRUE,nrows = nLoadRows)
-test.dat = fread('../data/test_date.csv',header = TRUE,nrows = nLoadRows)
+if (1 == 0)
+{
+  train.cat = fread('../data/train_categorical.csv',header = TRUE,nrows = nLoadRows)
+  train.dat = fread('../data/train_date.csv',header = TRUE,nrows = nLoadRows)
+
+  test.num = fread('../data/test_numeric.csv',header = TRUE,nrows = nLoadRows)
+  test.cat = fread('../data/test_categorical.csv',header = TRUE,nrows = nLoadRows)
+  test.dat = fread('../data/test_date.csv',header = TRUE,nrows = nLoadRows)
+}
 
 
 #"QnD" solution : ("quick and dirty")
@@ -20,7 +25,7 @@ test.dat = fread('../data/test_date.csv',header = TRUE,nrows = nLoadRows)
 
 
 #SPLIT train in development (80%) and cross-validation (20%)
-devInd = 1:round(0.8*nrow(train.num))
+devInd = 1:round(0.5*nrow(train.num))
 cvInd = (1+last(devInd)):nrow(train.num)
 dev.num = train.num[devInd,]
 cv.num = train.num[cvInd,]
@@ -86,7 +91,7 @@ for (min_child_w in 5:5) {
     # PREDICT on cv ...
     pred_cv = predict(fit.dev, as.matrix(cv.num),missing = NA)
     #pred_test[which(pred_test<0)] = 0
-    err_pred_cv = errMeasure3(pred_cv,cv.num$Response )
+    err_pred_cv = errMeasure4(pred_cv,cv.num$Response,0.5)
     if (VERBOSE == 1){
       print(err_pred_cv)
     }
@@ -95,5 +100,36 @@ for (min_child_w in 5:5) {
   }
   
 }
+
+if (1 == 0)
+{
+  rm(list=ls())
+  gc()
+}
+
+
+if ( 1==0)
+{
+# Use the model to produce a dirty submission:
+rm(train.num)
+gc()
+test.num = fread('../data/test_numeric.csv',header = TRUE)
+# predict on test ...
+pred_test = predict(fit.dev,as.matrix(test.num),missing = NA)
+
+# prepare the submission file
+thr = 0.5
+pred_test_submission = pred_test
+pred_test_submission[which(pred_test <= thr)] = 0
+pred_test_submission[which(pred_test >  thr)] = 1
+
+submitData = as.data.table(cbind(test.num$Id,pred_test_submission))
+setnames(submitData,c("Id","Response"))
+options(scipen = 999)
+if (1==1)
+  write.csv(submitData[,.(Id,Response)],"submit.qnd.001.csv", row.names = FALSE)
+options(scipen = 0)
+}
+
 
 

@@ -19,6 +19,20 @@ errMeasure3 <- function (vPred, vTarget)
   return(sqrt(mean(s12,na.rm = TRUE)))
 }
 
+errMeasure4 <- function (vPred, vTarget, threshold)
+{
+  # Mtahew correlation coefficient
+  vPred[which(vPred <= threshold)] = 0
+  vPred[which(vPred > threshold)] = 1
+  
+  TP = sum((vTarget == 1 & vPred == 1))
+  TN = sum((vTarget == 0 & vPred == 0))
+  FP = sum((vTarget == 0 & vPred == 1))
+  FN = sum((vTarget == 1 & vPred == 1))
+  return((TP*TN-FP*FN)/(sqrt(TP+FP)*sqrt(TP+FN)*sqrt(TN+FP)*sqrt(TN+FN)))
+}
+
+
 
 saveDataT <- function(object,data.base.name,object.name,compress = FALSE)
 {
