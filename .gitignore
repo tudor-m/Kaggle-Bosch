@@ -3,3 +3,4 @@ data/*.csv
 .Rproj.user
 data/.DS_Store
 .DS_Store
+R/output.R.txt
