@@ -40,8 +40,8 @@ cv.num = train.num[cvInd,]
 
 
 # FIT on dev ...
-dtrain <- xgb.DMatrix(data = as.matrix(dev.num[,-"Response",with=F]), label=dev.num$Response, missing = NA)
-dtest <- xgb.DMatrix(data = as.matrix(cv.num), label=cv.num$Response , missing = NA)
+dtrain <- xgb.DMatrix(data = as.matrix(dev.num[,-c("Id","Response"),with=F]), label=dev.num$Response, missing = NA)
+dtest <- xgb.DMatrix(data = as.matrix(cv.num[,-c("Id","Response"),with=F]), label=cv.num$Response , missing = NA)
 
 watchlist <- list(train = dtrain, test = dtest)
 mccEval <- function(preds, dtrain)
@@ -96,7 +96,7 @@ for (min_child_w in 9:9) {
     }
     # saveDataT(fit.train,DATA_SET,paste(as.character(c("fit.train",".",jBin,".",jj)),collapse = ""))
     # PREDICT on cv ...
-    pred_cv = predict(fit.dev, as.matrix(cv.num),missing = NA)
+    pred_cv = predict(fit.dev, as.matrix(cv.num[,-c("Id","Response"),with=F]),missing = NA)
     #pred_test[which(pred_test<0)] = 0
     err_pred_cv = errMeasure4(pred_cv,cv.num$Response,0.25)
     if (VERBOSE == 1){
@@ -122,7 +122,7 @@ rm(train.num)
 gc()
 test.num = fread('../data/test_numeric.csv',header = TRUE)
 # predict on test ...
-pred_test = predict(fit.dev,as.matrix(test.num),missing = NA)
+pred_test = predict(fit.dev,as.matrix(test.num[,-c("Id"),with=F]),missing = NA)
 
 # prepare the submission file
 thr = 0.25
@@ -137,8 +137,8 @@ setnames(submitData,c("Id","Response"))
 options(scipen = 999)
 if (1==1)
 {
-  write.csv(predData[,.(Id,Response)],"pred.qnd.001-3.csv", row.names = FALSE)
-  write.csv(submitData[,.(Id,Response)],"submit.qnd.001-3.csv", row.names = FALSE)
+  write.csv(predData[,.(Id,Response)],"pred.qnd.001-4.csv", row.names = FALSE)
+  write.csv(submitData[,.(Id,Response)],"submit.qnd.001-4.csv", row.names = FALSE)
 }
 options(scipen = 0)
 }

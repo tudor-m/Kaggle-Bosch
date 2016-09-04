@@ -89,8 +89,8 @@ for (min_child_w in 11:11) {
       base_score          = 0.8,
       eta                 = 0.01,#0.05, #0.02, # 0.06, #0.01,
       max_depth           = max_d, #changed from default of 8
-      subsample           = 0.8, #0.9, # 0.7
-      colsample_bytree    = 0.8, # 0.7
+      subsample           = 0.9, #0.9, # 0.7
+      colsample_bytree    = 0.9, # 0.7
       #num_parallel_tree   = 2,
       nthread = 4,
       alpha = 0,    #0.0001,
@@ -143,11 +143,10 @@ if (1 == 0)
 if ( 1==0)
 {
 # Use the model to produce a dirty submission:
-rm(train.num)
-gc()
-test.num = fread('../data/test_numeric.csv',header = TRUE)
+test.feat = fread('../data/test_date.csv',header = TRUE)
+
 # predict on test ...
-pred_test = predict(fit.dev,as.matrix(test.num),missing = NA)
+pred_test = predict(fit.dev,as.matrix(test.feat),missing = NA)
 
 # prepare the submission file
 thr = 0.25
@@ -155,15 +154,15 @@ pred_test_submission = pred_test
 pred_test_submission[which(pred_test <= thr)] = 0
 pred_test_submission[which(pred_test >  thr)] = 1
 
-predData   = as.data.table(cbind(test.num$Id,pred_test))
+predData   = as.data.table(cbind(test.feat$Id,pred_test))
 setnames(predData,c("Id","Response"))
-submitData = as.data.table(cbind(test.num$Id,pred_test_submission))
+submitData = as.data.table(cbind(test.feat$Id,pred_test_submission))
 setnames(submitData,c("Id","Response"))
 options(scipen = 999)
 if (1==1)
 {
-  write.csv(predData[,.(Id,Response)],"pred.qnd.002.csv", row.names = FALSE)
-  write.csv(submitData[,.(Id,Response)],"submit.qnd.002.csv", row.names = FALSE)
+  write.csv(predData[,.(Id,Response)],"pred.qnd.002-1.csv", row.names = FALSE)
+  write.csv(submitData[,.(Id,Response)],"submit.qnd.002-1.csv", row.names = FALSE)
 }
 options(scipen = 0)
 }
