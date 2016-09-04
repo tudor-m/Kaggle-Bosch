@@ -1,3 +1,9 @@
+if (1 == 1)
+{
+  rm(list=ls())
+  gc()
+}
+
 library(data.table)
 library(xgboost)
 source("futil.R")
@@ -52,14 +58,15 @@ for (min_child_w in 9:9) {
     print(c("min_child_weight: ",min_child_w))
     
     
-    nround = 80
+    nround = 150
     param <- list(  
       #objective           = "multi:softprob", num_class = 4,
-      objective           = "reg:linear",
+      objective           = "binary:logistic",
+      #objective           = "reg:linear",
       booster             = "gbtree",
       #booster             = "gblinear",
       base_score          = 0.5,
-      eta                 = 0.025,#0.05, #0.02, # 0.06, #0.01,
+      eta                 = 0.01,#0.05, #0.02, # 0.06, #0.01,
       max_depth           = max_d, #changed from default of 8
       subsample           = 0.5, #0.9, # 0.7
       colsample_bytree    = 0.5, # 0.7
@@ -130,8 +137,8 @@ setnames(submitData,c("Id","Response"))
 options(scipen = 999)
 if (1==1)
 {
-  write.csv(predData[,.(Id,Response)],"pred.qnd.002-2.csv", row.names = FALSE)
-  write.csv(submitData[,.(Id,Response)],"submit.qnd.002-2.csv", row.names = FALSE)
+  write.csv(predData[,.(Id,Response)],"pred.qnd.001-3.csv", row.names = FALSE)
+  write.csv(submitData[,.(Id,Response)],"submit.qnd.001-3.csv", row.names = FALSE)
 }
 options(scipen = 0)
 }
