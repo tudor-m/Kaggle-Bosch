@@ -1,6 +1,13 @@
+if (1 == 1)
+{
+  rm(list=ls())
+  gc()
+}
+
 library(data.table)
 library(xgboost)
 source("futil.R")
+
 
 if (1 == 0) #run only once
 {
@@ -15,8 +22,16 @@ if (1 == 0) #run only once
 sink(file="output.R.txt",append = TRUE, split=TRUE)
 timestamp()
 
+#"QnD" solution : ("quick and dirty")
+# replace NA with 0 - not needed because xboost handles NAs
+# arrind = which(is.na(train.num),arr.ind=T)
+# train.num[arrind] = 0
+
+nLoadRows = 100000
+VERBOSE = 1
 if (1 == 0)
 {
+  train.num = fread('../data/train_numeric.csv',header = TRUE,nrows = nLoadRows)
   train.cat = fread('../data/train_categorical.csv',header = TRUE,nrows = nLoadRows)
   train.dat = fread('../data/train_date.csv',header = TRUE,nrows = nLoadRows)
 
@@ -26,57 +41,56 @@ if (1 == 0)
 }
 
 
-#"QnD" solution : ("quick and dirty")
-# replace NA with 0 - not needed because xboost handles NAs
-# arrind = which(is.na(train.num),arr.ind=T)
-# train.num[arrind] = 0
-
-nLoadRows = 400000
-VERBOSE = 1
+# ========== Initialize the features =================
 
 train.target = fread('../data/train_response.csv',header = TRUE,nrows = nLoadRows)
-train.num = fread('../data/train_numeric.csv',header = TRUE,nrows = nLoadRows)
+train.dat = fread('../data/train_date.csv',header = TRUE,nrows = nLoadRows)
 
+#SPLIT train in development (50%) and cross-validation (20%)
+devInd = 1:round(0.5*nrow(train.target))
+cvInd = (1+last(devInd)):nrow(train.target)
 
-#SPLIT train in development (80%) and cross-validation (20%)
-devInd = 1:round(0.5*nrow(train.num))
-cvInd = (1+last(devInd)):nrow(train.num)
-
-dev.num = train.num[devInd,]
-cv.num = train.num[cvInd,]
+dev.feat   = train.dat[devInd,-"Response",with=F]
+cv.feat    = train.dat[cvInd,-"Response",with=F]
 dev.target = train.target[devInd]
-cv.target = train.target[cvInd]
+cv.target  = train.target[cvInd]
+
+
+# ========== FIT and PREDICT on CrossValidation=================
 
 # FIT on dev ...
-dtrain <- xgb.DMatrix(data = as.matrix(dev.num[,-"Response",with=F]), label=dev.target$Response, missing = NA)
-dtest <- xgb.DMatrix(data = as.matrix(cv.num), label=cv.target$Response , missing = NA)
+dtrain <- xgb.DMatrix(data = as.matrix(dev.feat), label=dev.target$Response, missing = NA)
+dtest <- xgb.DMatrix(data = as.matrix(cv.feat), label=cv.target$Response , missing = NA)
 
 watchlist <- list(train = dtrain, test = dtest)
+
+for (thr in c(0.25)) {
+  print(c("threshold: ",thr ))
 mccEval <- function(preds, dtrain)
 {
   labels = getinfo(dtrain, "label")
-  err = as.numeric(errMeasure4(preds,labels,0.5))
+  err = as.numeric(errMeasure4(preds,labels,thr))
   return(list(metric="error",value=err))
 }
 
-for (min_child_w in 9:9) {
-  for (max_d in 9:9) {
+for (min_child_w in 11:11) {
+  for (max_d in 11:11) {
     print(c("max_d: ",max_d))
     #print(c("fmla= ",fmla_c))
     print(c("min_child_weight: ",min_child_w))
-    
-    
-    nround = 80
+
+    nround = 150
     param <- list(  
       #objective           = "multi:softprob", num_class = 4,
-      objective           = "reg:linear",
+      #objective           = "reg:linear",
+      objective           = "binary:logistic",
       booster             = "gbtree",
       #booster             = "gblinear",
-      base_score          = 0.5,
-      eta                 = 0.025,#0.05, #0.02, # 0.06, #0.01,
+      base_score          = 0.8,
+      eta                 = 0.01,#0.05, #0.02, # 0.06, #0.01,
       max_depth           = max_d, #changed from default of 8
-      subsample           = 0.5, #0.9, # 0.7
-      colsample_bytree    = 0.5, # 0.7
+      subsample           = 0.8, #0.9, # 0.7
+      colsample_bytree    = 0.8, # 0.7
       #num_parallel_tree   = 2,
       nthread = 4,
       alpha = 0,    #0.0001,
@@ -103,16 +117,16 @@ for (min_child_w in 9:9) {
     }
     # saveDataT(fit.train,DATA_SET,paste(as.character(c("fit.train",".",jBin,".",jj)),collapse = ""))
     # PREDICT on cv ...
-    pred_cv = predict(fit.dev, as.matrix(cv.num),missing = NA)
+    pred_cv = predict(fit.dev, as.matrix(cv.feat),missing = NA)
     #pred_test[which(pred_test<0)] = 0
-    err_pred_cv = errMeasure4(pred_cv,cv.num$Response,0.25)
+    err_pred_cv = errMeasure4(pred_cv,cv.target$Response,thr)
     if (VERBOSE == 1){
       print(err_pred_cv)
     }
     #pred_test_xgb[[jj]] = pred_cv
     #err_pred_test_xgb[[jj]] = err_pred_cv
   }
-  
+}
 }
 
 if (1 == 0)
@@ -122,7 +136,11 @@ if (1 == 0)
 }
 
 
-if ( 1==1)
+
+# ========== PREDICT for Submission=================
+
+
+if ( 1==0)
 {
 # Use the model to produce a dirty submission:
 rm(train.num)

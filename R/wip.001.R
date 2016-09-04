@@ -41,7 +41,7 @@ watchlist <- list(train = dtrain, test = dtest)
 mccEval <- function(preds, dtrain)
 {
   labels = getinfo(dtrain, "label")
-  err = as.numeric(errMeasure4(preds,labels,0.5))
+  err = as.numeric(errMeasure4(preds,labels,0.25))
   return(list(metric="error",value=err))
 }
 
@@ -108,7 +108,7 @@ if (1 == 0)
 }
 
 
-if ( 1==1)
+if ( 1==0)
 {
 # Use the model to produce a dirty submission:
 rm(train.num)
@@ -130,8 +130,8 @@ setnames(submitData,c("Id","Response"))
 options(scipen = 999)
 if (1==1)
 {
-  write.csv(predData[,.(Id,Response)],"pred.qnd.002.csv", row.names = FALSE)
-  write.csv(submitData[,.(Id,Response)],"submit.qnd.002.csv", row.names = FALSE)
+  write.csv(predData[,.(Id,Response)],"pred.qnd.002-2.csv", row.names = FALSE)
+  write.csv(submitData[,.(Id,Response)],"submit.qnd.002-2.csv", row.names = FALSE)
 }
 options(scipen = 0)
 }
