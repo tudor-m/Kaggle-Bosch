@@ -115,7 +115,7 @@ if (1 == 0)
 }
 
 
-if ( 1==0)
+if ( 1==1)
 {
 # Use the model to produce a dirty submission:
 rm(train.num)
