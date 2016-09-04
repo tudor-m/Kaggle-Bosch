@@ -58,7 +58,7 @@ for (min_child_w in 9:9) {
     print(c("min_child_weight: ",min_child_w))
     
     
-    nround = 150
+    nround = 120
     param <- list(  
       #objective           = "multi:softprob", num_class = 4,
       objective           = "binary:logistic",
@@ -119,6 +119,8 @@ if ( 1==1)
 {
 # Use the model to produce a dirty submission:
 rm(train.num)
+rm(dev.num)
+rm(cv.num)
 gc()
 test.num = fread('../data/test_numeric.csv',header = TRUE)
 # predict on test ...
@@ -137,8 +139,8 @@ setnames(submitData,c("Id","Response"))
 options(scipen = 999)
 if (1==1)
 {
-  write.csv(predData[,.(Id,Response)],"pred.qnd.001-4.csv", row.names = FALSE)
-  write.csv(submitData[,.(Id,Response)],"submit.qnd.001-4.csv", row.names = FALSE)
+  write.csv(predData[,.(Id,Response)],"pred.qnd.001-5.csv", row.names = FALSE)
+  write.csv(submitData[,.(Id,Response)],"submit.qnd.001-5.csv", row.names = FALSE)
 }
 options(scipen = 0)
 }
