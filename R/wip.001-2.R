@@ -143,7 +143,6 @@ combinedSubmission = 1*(submitData[[1]][,2,with=F] | submitData[[2]][,2,with=F])
 combinedSubmitData = as.data.table(cbind(test.num_Id,combinedSubmission))
 setnames(combinedSubmitData,c("Id","Response"))
 options(scipen = 999)
-write.csv(combinedSubmitData[,.(Id,Response)],paste(c("pred.wip.001-2.","OR",".csv"),sep="",collapse = ""), row.names = FALSE)
 write.csv(combinedSubmitData[,.(Id,Response)],paste(c("submit.wip.001-2.","OR",".csv"),sep="",collapse = ""), row.names = FALSE)
 options(scipen = 0)
 
@@ -152,10 +151,21 @@ combinedSubmission = 1*(submitData[[1]][,2,with=F] & submitData[[2]][,2,with=F])
 combinedSubmitData = as.data.table(cbind(test.num_Id,combinedSubmission))
 setnames(combinedSubmitData,c("Id","Response"))
 options(scipen = 999)
-
-write.csv(combinedSubmitData[,.(Id,Response)],paste(c("pred.wip.001-2.","AND",".csv"),sep="",collapse = ""), row.names = FALSE)
 write.csv(combinedSubmitData[,.(Id,Response)],paste(c("submit.wip.001-2.","AND",".csv"),sep="",collapse = ""), row.names = FALSE)
+options(scipen = 0)
 
+# Mean:
+cCoef = c(0.5,0.5)
+combinedPred = cCoef[1]*predData[[1]][,2,with=F] + cCoef[2]*predData[[2]][,2,with=F]
+
+combinedSubmission = combinedPred
+combinedSubmission[which(combinedPred<=thr)] = 0
+combinedSubmission[which(combinedPred>thr)] = 1
+
+combinedSubmitData = as.data.table(cbind(test.num_Id,combinedSubmission))
+setnames(combinedSubmitData,c("Id","Response"))
+options(scipen = 999)
+write.csv(combinedSubmitData[,.(Id,Response)],paste(c("submit.wip.001-2.","MEAN",".csv"),sep="",collapse = ""), row.names = FALSE)
 options(scipen = 0)
 
 }
