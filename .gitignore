@@ -4,3 +4,6 @@ data/*.csv
 data/.DS_Store
 .DS_Store
 R/output.R.txt
+R/*.swp
+R\*.swp
+

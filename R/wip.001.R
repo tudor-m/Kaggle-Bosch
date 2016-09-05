@@ -51,8 +51,8 @@ mccEval <- function(preds, dtrain)
   return(list(metric="error",value=err))
 }
 
-for (min_child_w in 9:9) {
-  for (max_d in 9:9) {
+for (min_child_w in 13:13) {
+  for (max_d in 11:11) {
     print(c("max_d: ",max_d))
     #print(c("fmla= ",fmla_c))
     print(c("min_child_weight: ",min_child_w))
@@ -115,7 +115,7 @@ if (1 == 0)
 }
 
 
-if ( 1==1)
+if ( 1==0)
 {
 # Use the model to produce a dirty submission:
 rm(train.num)
