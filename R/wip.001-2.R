@@ -117,7 +117,7 @@ gc()
 # prepare the submission file
 # Model 1:
 thr = 0.25
-i = 1
+i = 2
 pred_test_submission = pred_test[[i]]
 pred_test_submission[which(pred_test[[i]] <= thr)] = 0
 pred_test_submission[which(pred_test[[i]] >  thr)] = 1
@@ -128,8 +128,8 @@ submitData = as.data.table(cbind(test.num_Id,pred_test_submission))
 setnames(submitData,c("Id","Response"))
 options(scipen = 999)
 
-  write.csv(predData[,.(Id,Response)],"pred.wip.001-2.1.csv", row.names = FALSE)
-  write.csv(submitData[,.(Id,Response)],"submit.wip.001-2.1.csv", row.names = FALSE)
+  write.csv(predData[,.(Id,Response)],"pred.wip.001-2.2.csv", row.names = FALSE)
+  write.csv(submitData[,.(Id,Response)],"submit.wip.001-2.2.csv", row.names = FALSE)
 
   options(scipen = 0)
 }
