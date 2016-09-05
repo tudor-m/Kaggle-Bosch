@@ -115,23 +115,49 @@ remove(test.num)
 gc()
 
 # prepare the submission file
-# Model 1:
-thr = 0.25
-i = 2
-pred_test_submission = pred_test[[i]]
-pred_test_submission[which(pred_test[[i]] <= thr)] = 0
-pred_test_submission[which(pred_test[[i]] >  thr)] = 1
+# Model:
+predData = list()
+submitData = list()
+for (i in 1:length(pred_test))
+{
+  thr = 0.25
+  ed_test_submission = pred_test[[i]]
+  pred_test_submission[which(pred_test[[i]] <= thr)] = 0
+  pred_test_submission[which(pred_test[[i]] >  thr)] = 1
 
-predData   = as.data.table(cbind(test.num_Id,pred_test[[i]]))
-setnames(predData,c("Id","Response"))
-submitData = as.data.table(cbind(test.num_Id,pred_test_submission))
-setnames(submitData,c("Id","Response"))
-options(scipen = 999)
+  predData[[i]]   = as.data.table(cbind(test.num_Id,pred_test[[i]]))
+  setnames(predData[[i]],c("Id","Response"))
+  submitData[[i]] = as.data.table(cbind(test.num_Id,pred_test_submission))
+  setnames(submitData[[i]],c("Id","Response"))
+  options(scipen = 999)
 
-  write.csv(predData[,.(Id,Response)],"pred.wip.001-2.2.csv", row.names = FALSE)
-  write.csv(submitData[,.(Id,Response)],"submit.wip.001-2.2.csv", row.names = FALSE)
+  write.csv(predData[[i]][,.(Id,Response)],paste(c("pred.wip.001-2.",i,".csv"),sep="",collapse = ""), row.names = FALSE)
+  write.csv(submitData[[i]][,.(Id,Response)],paste(c("submit.wip.001-2.",i,".csv"),sep="",collapse = ""), row.names = FALSE)
 
   options(scipen = 0)
+}
+
+# Combine the submissions:
+# OR:
+combinedSubmission = 1*(submitData[[1]][,2,with=F] | submitData[[2]][,2,with=F])
+combinedSubmitData = as.data.table(cbind(test.num_Id,combinedSubmission))
+setnames(combinedSubmitData,c("Id","Response"))
+options(scipen = 999)
+write.csv(combinedSubmitData[,.(Id,Response)],paste(c("pred.wip.001-2.","OR",".csv"),sep="",collapse = ""), row.names = FALSE)
+write.csv(combinedSubmitData[,.(Id,Response)],paste(c("submit.wip.001-2.","OR",".csv"),sep="",collapse = ""), row.names = FALSE)
+options(scipen = 0)
+
+# AND:
+combinedSubmission = 1*(submitData[[1]][,2,with=F] & submitData[[2]][,2,with=F])
+combinedSubmitData = as.data.table(cbind(test.num_Id,combinedSubmission))
+setnames(combinedSubmitData,c("Id","Response"))
+options(scipen = 999)
+
+write.csv(combinedSubmitData[,.(Id,Response)],paste(c("pred.wip.001-2.","AND",".csv"),sep="",collapse = ""), row.names = FALSE)
+write.csv(combinedSubmitData[,.(Id,Response)],paste(c("submit.wip.001-2.","AND",".csv"),sep="",collapse = ""), row.names = FALSE)
+
+options(scipen = 0)
+
 }
 
 sink()
