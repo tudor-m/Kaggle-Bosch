@@ -21,14 +21,17 @@ timestamp()
 # Load all the input file:
 train.num = fread('../data/train_numeric.csv',header = TRUE,nrows = -1)
 nr = nrow(train.num)
-nr1 = round(0.25*nr)
+nr1 = round(0.5*nr)
 
 set.seed(100)
+
 rIndex = sample(nr,nr)
 rIndex1 = rIndex[1:nr1]
-rIndex2 = rIndex[(nr1+1):2*nr1]
-rIndex3 = rIndex[(2*nr1+1):3*nr1]
-rIndex4 = rIndex[(3*nr1+1):4*nr1]
+rIndex2 = rIndex[(nr1+1):nr]
+
+rIndex = sample(nr,nr)
+rIndex3 = rIndex[1:nr1]
+rIndex4 = rIndex[(nr1+1):nr]
 
 fit.dev.xgb.model=list()
 remove(train.num);
@@ -50,24 +53,24 @@ for (i in 1:4)
   if (i==2)
   {
     train.num = fread('../data/train_numeric.csv',header = TRUE,nrows = -1)
-    dtrain <- xgb.DMatrix(data = as.matrix(train.num[rIndex2,][,-c("Id","Response"),with=F]), label=train.num$Response[rIndex1], missing = NA)
-    dtest <- xgb.DMatrix(data = as.matrix(train.num[rIndex3,][,-c("Id","Response"),with=F]), label=train.num$Response[rIndex2], missing = NA)
+    dtrain <- xgb.DMatrix(data = as.matrix(train.num[rIndex2,][,-c("Id","Response"),with=F]), label=train.num$Response[rIndex2], missing = NA)
+    dtest <- xgb.DMatrix(data = as.matrix(train.num[rIndex1,][,-c("Id","Response"),with=F]), label=train.num$Response[rIndex1], missing = NA)
     remove(train.num);
     gc()
   }
   if (i==3)
   {
     train.num = fread('../data/train_numeric.csv',header = TRUE,nrows = -1)
-    dtrain <- xgb.DMatrix(data = as.matrix(train.num[rIndex3,][,-c("Id","Response"),with=F]), label=train.num$Response[rIndex1], missing = NA)
-    dtest <- xgb.DMatrix(data = as.matrix(train.num[rIndex4,][,-c("Id","Response"),with=F]), label=train.num$Response[rIndex2], missing = NA)
+    dtrain <- xgb.DMatrix(data = as.matrix(train.num[rIndex3,][,-c("Id","Response"),with=F]), label=train.num$Response[rIndex3], missing = NA)
+    dtest <- xgb.DMatrix(data = as.matrix(train.num[rIndex4,][,-c("Id","Response"),with=F]), label=train.num$Response[rIndex4], missing = NA)
     remove(train.num);
     gc()
   }
   if (i==4)
   {
     train.num = fread('../data/train_numeric.csv',header = TRUE,nrows = -1)
-    dtrain <- xgb.DMatrix(data = as.matrix(train.num[rIndex4,][,-c("Id","Response"),with=F]), label=train.num$Response[rIndex1], missing = NA)
-    dtest <- xgb.DMatrix(data = as.matrix(train.num[rIndex1,][,-c("Id","Response"),with=F]), label=train.num$Response[rIndex2], missing = NA)
+    dtrain <- xgb.DMatrix(data = as.matrix(train.num[rIndex4,][,-c("Id","Response"),with=F]), label=train.num$Response[rIndex4], missing = NA)
+    dtest <- xgb.DMatrix(data = as.matrix(train.num[rIndex3,][,-c("Id","Response"),with=F]), label=train.num$Response[rIndex3], missing = NA)
     remove(train.num);
     gc()
   }
@@ -80,7 +83,7 @@ for (i in 1:4)
     err = as.numeric(errMeasure4(preds,labels,0.25))
     return(list(metric="error",value=err))
   }
-  for (min_child_w in 13:13) {
+  for (min_child_w in 11:11) {
     for (max_d in 11:11) {
       print(c("max_d: ",max_d))
       print(c("min_child_weight: ",min_child_w))
@@ -143,7 +146,7 @@ submitData = list()
 for (i in 1:length(pred_test))
 {
   thr = 0.25
-  ed_test_submission = pred_test[[i]]
+  pred_test_submission = pred_test[[i]]
   pred_test_submission[which(pred_test[[i]] <= thr)] = 0
   pred_test_submission[which(pred_test[[i]] >  thr)] = 1
 
@@ -172,7 +175,7 @@ combinedSubmission[which(combinedPred>thr)] = 1
 combinedSubmitData = as.data.table(cbind(test.num_Id,combinedSubmission))
 setnames(combinedSubmitData,c("Id","Response"))
 options(scipen = 999)
-write.csv(combinedSubmitData[,.(Id,Response)],paste(c("submit.wip.001-2.","MEAN",".csv"),sep="",collapse = ""), row.names = FALSE)
+write.csv(combinedSubmitData[,.(Id,Response)],paste(c("submit.wip.001-4.","MEAN",".csv"),sep="",collapse = ""), row.names = FALSE)
 options(scipen = 0)
 
 }
