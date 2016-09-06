@@ -83,8 +83,8 @@ for (i in 1:4)
     err = as.numeric(errMeasure4(preds,labels,0.25))
     return(list(metric="error",value=err))
   }
-  for (min_child_w in 11:11) {
-    for (max_d in 11:11) {
+  for (min_child_w in 13:13) {
+    for (max_d in 13:13) {
       print(c("max_d: ",max_d))
       print(c("min_child_weight: ",min_child_w))
       nround = 120
@@ -125,7 +125,7 @@ remove(fit.dev)
 gc()
 
 
-if ( 1==0)
+if ( 1==1)
 {
 # Use the model to produce 2 submissions:
 test.num = fread('../data/test_numeric.csv',header = TRUE)
@@ -156,8 +156,8 @@ for (i in 1:length(pred_test))
   setnames(submitData[[i]],c("Id","Response"))
   options(scipen = 999)
 
-  write.csv(predData[[i]][,.(Id,Response)],paste(c("pred.wip.001-4.",i,".csv"),sep="",collapse = ""), row.names = FALSE)
-  write.csv(submitData[[i]][,.(Id,Response)],paste(c("submit.wip.001-4.",i,".csv"),sep="",collapse = ""), row.names = FALSE)
+  write.csv(predData[[i]][,.(Id,Response)],paste(c("pred.wip.001-4-2.",i,".csv"),sep="",collapse = ""), row.names = FALSE)
+  write.csv(submitData[[i]][,.(Id,Response)],paste(c("submit.wip.001-4-2.",i,".csv"),sep="",collapse = ""), row.names = FALSE)
 
   options(scipen = 0)
 }
@@ -175,7 +175,7 @@ combinedSubmission[which(combinedPred>thr)] = 1
 combinedSubmitData = as.data.table(cbind(test.num_Id,combinedSubmission))
 setnames(combinedSubmitData,c("Id","Response"))
 options(scipen = 999)
-write.csv(combinedSubmitData[,.(Id,Response)],paste(c("submit.wip.001-4.","MEAN",".csv"),sep="",collapse = ""), row.names = FALSE)
+write.csv(combinedSubmitData[,.(Id,Response)],paste(c("submit.wip.001-4-2.","MEAN",".csv"),sep="",collapse = ""), row.names = FALSE)
 options(scipen = 0)
 
 }
