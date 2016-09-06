@@ -163,7 +163,7 @@ for (i in 1:length(pred_test))
 }
 
 # Mean:
-cCoef = c(0.25,0.25,0.25,0.25)
+cCoef = c(0.4,0.1,0.4,0.1)
 combinedPred = 0
 for (j in 1:length(cCoef))
   combinedPred = combinedPred + cCoef[j]*predData[[j]][,2,with=F]
@@ -175,7 +175,7 @@ combinedSubmission[which(combinedPred>thr)] = 1
 combinedSubmitData = as.data.table(cbind(test.num_Id,combinedSubmission))
 setnames(combinedSubmitData,c("Id","Response"))
 options(scipen = 999)
-write.csv(combinedSubmitData[,.(Id,Response)],paste(c("submit.wip.001-4-2.","MEAN",".csv"),sep="",collapse = ""), row.names = FALSE)
+write.csv(combinedSubmitData[,.(Id,Response)],paste(c("submit.wip.001-4-3.","MEAN",".csv"),sep="",collapse = ""), row.names = FALSE)
 options(scipen = 0)
 
 }
