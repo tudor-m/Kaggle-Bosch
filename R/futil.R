@@ -55,7 +55,7 @@ errMeasure6 <- function (vPred, vTarget, threshold)
   FP = sum((vTarget == 0 & vPred == 1))
   FN = sum((vTarget == 1 & vPred == 0))
   #return(abs((TP-TN)/TN))
-  return(FP)
+  return(TP+FP)
 }
 
 

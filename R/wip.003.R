@@ -97,7 +97,7 @@ for (i in 1:4)
   splitEval6 <- function(preds, dtrain)
   {
     labels = getinfo(dtrain, "label")
-    err = as.numeric(errMeasure6(preds,labels,0.1))
+    err = as.numeric(errMeasure6(preds,labels,0.05))
     return(list(metric="error",value=err))
   }
   
@@ -109,22 +109,22 @@ for (i in 1:4)
     return(list(metric="error",value=complex(real=err1,imaginary=err2)))
   }
   
-  for (min_child_w in 25:25) {
-    for (max_d in 100:100) {
+  for (min_child_w in 400:400) {
+    for (max_d in 1000:1000) {
       print(c("max_d: ",max_d))
       print(c("min_child_weight: ",min_child_w))
-      nround = 40
+      nround = 1000
       param <- list(  
         #objective           = "multi:softprob", num_class = 4,
         #objective           = "binary:logistic",
         objective           = "reg:linear",
         booster             = "gbtree",
         #booster             = "gblinear",
-        base_score          = 0.5,
-        eta                 = 0.5,#0.05, #0.02, # 0.06, #0.01,
+        base_score          = 0.001,
+        eta                 = 0.8,#0.05, #0.02, # 0.06, #0.01,
         max_depth           = max_d, #changed from default of 8
-        subsample           = 0.8, #0.9, # 0.7
-        colsample_bytree    = 0.8, # 0.7
+        subsample           = 0.9, #0.9, # 0.7
+        colsample_bytree    = 0.9, # 0.7
         #num_parallel_tree   = 2,
         nthread = 4,
         alpha = 0,    #0.0001,
