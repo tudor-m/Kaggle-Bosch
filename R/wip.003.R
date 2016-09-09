@@ -46,6 +46,8 @@ for (i in 1:4)
   if (i==1)
   {
     train.num = fread('../data/train_numeric.csv',header = TRUE,nrows = nread)
+    train.response = train.num$Response[rIndex1]
+    test.response = train.num$Response[rIndex2]
     dtrain <- xgb.DMatrix(data = as.matrix(train.num[rIndex1,][,-c("Id","Response"),with=F]), label=train.num$Response[rIndex1], missing = NA)
     dtest <- xgb.DMatrix(data = as.matrix(train.num[rIndex2,][,-c("Id","Response"),with=F]), label=train.num$Response[rIndex2], missing = NA)
     remove(train.num);
@@ -99,11 +101,19 @@ for (i in 1:4)
     return(list(metric="error",value=err))
   }
   
-  for (min_child_w in 8:8) {
+  splitEval <- function(preds, dtrain)
+  {
+    labels = getinfo(dtrain, "label")
+    err1 = as.numeric(errMeasure5(preds,labels,0.05))
+    err2 = as.numeric(errMeasure6(preds,labels,0.05))
+    return(list(metric="error",value=complex(real=err1,imaginary=err2)))
+  }
+  
+  for (min_child_w in 25:25) {
     for (max_d in 100:100) {
       print(c("max_d: ",max_d))
       print(c("min_child_weight: ",min_child_w))
-      nround = 400
+      nround = 40
       param <- list(  
         #objective           = "multi:softprob", num_class = 4,
         #objective           = "binary:logistic",
@@ -123,7 +133,8 @@ for (i in 1:4)
         scale_pos_weight = 1,
         min_child_weight    = min_child_w, #4, #4
         #eval_metric         = mccEval,
-        eval_metric         = splitEval5,
+        #eval_metric         = splitEval5,
+        eval_metric         = splitEval,
         #eval_metric         = "rmse",
         early_stopping_rounds    = 2,
         maximize = TRUE

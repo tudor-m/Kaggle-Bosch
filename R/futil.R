@@ -34,7 +34,6 @@ errMeasure4 <- function (vPred, vTarget, threshold)
 
 errMeasure5 <- function (vPred, vTarget, threshold)
 {
-  # Mathew Correlation Coefficient
   vPred[which(vPred <= threshold)] = 0
   vPred[which(vPred > threshold)] = 1
   
@@ -42,13 +41,12 @@ errMeasure5 <- function (vPred, vTarget, threshold)
   TN = sum((vTarget == 0 & vPred == 0))
   FP = sum((vTarget == 0 & vPred == 1))
   FN = sum((vTarget == 1 & vPred == 0))
-  return(TP/(FN+TP))
-  #return(FN)
+  #return(TP/(FN+TP))
+  return(TP)
 }
 
 errMeasure6 <- function (vPred, vTarget, threshold)
 {
-  # Mathew Correlation Coefficient
   vPred[which(vPred <= threshold)] = 0
   vPred[which(vPred > threshold)] = 1
   
@@ -56,7 +54,8 @@ errMeasure6 <- function (vPred, vTarget, threshold)
   TN = sum((vTarget == 0 & vPred == 0))
   FP = sum((vTarget == 0 & vPred == 1))
   FN = sum((vTarget == 1 & vPred == 0))
-  return(abs((TP-TN)/TN))
+  #return(abs((TP-TN)/TN))
+  return(FP)
 }
 
 
