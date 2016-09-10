@@ -106,21 +106,22 @@ for (i in 1:4)
     labels = getinfo(dtrain, "label")
     err1 = as.numeric(errMeasure5(preds,labels,0.05))
     err2 = as.numeric(errMeasure6(preds,labels,0.05))
-    return(list(metric="error",value=complex(real=err1,imaginary=err2)))
+    err0 = as.numeric(errMeasure4(preds,labels,0.1))
+    return(list(metric="error",value=complex(real=err1,imaginary=err0)))
   }
   
   for (min_child_w in 400:400) {
     for (max_d in 1000:1000) {
       print(c("max_d: ",max_d))
       print(c("min_child_weight: ",min_child_w))
-      nround = 1000
+      nround = 150
       param <- list(  
         #objective           = "multi:softprob", num_class = 4,
         #objective           = "binary:logistic",
         objective           = "reg:linear",
         booster             = "gbtree",
         #booster             = "gblinear",
-        base_score          = 0.001,
+        base_score          = 0,
         eta                 = 0.8,#0.05, #0.02, # 0.06, #0.01,
         max_depth           = max_d, #changed from default of 8
         subsample           = 0.9, #0.9, # 0.7

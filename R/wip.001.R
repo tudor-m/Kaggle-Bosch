@@ -68,8 +68,8 @@ for (min_child_w in 13:13) {
       base_score          = 0.5,
       eta                 = 0.01,#0.05, #0.02, # 0.06, #0.01,
       max_depth           = max_d, #changed from default of 8
-      subsample           = 0.5, #0.9, # 0.7
-      colsample_bytree    = 0.5, # 0.7
+      subsample           = 0.9, #0.9, # 0.7
+      colsample_bytree    = 0.9, # 0.7
       #num_parallel_tree   = 2,
       nthread = 4,
       alpha = 0,    #0.0001,
