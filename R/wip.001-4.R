@@ -97,8 +97,8 @@ for (i in 1:4)
         base_score          = 0.5,
         eta                 = 0.01,#0.05, #0.02, # 0.06, #0.01,
         max_depth           = max_d, #changed from default of 8
-        subsample           = 0.5, #0.9, # 0.7
-        colsample_bytree    = 0.5, # 0.7
+        subsample           = 0.9, #0.9, # 0.7
+        colsample_bytree    = 0.9, # 0.7
         #num_parallel_tree   = 2,
         nthread = 4,
         alpha = 0,    #0.0001,
@@ -156,8 +156,8 @@ for (i in 1:length(pred_test))
   setnames(submitData[[i]],c("Id","Response"))
   options(scipen = 999)
 
-  write.csv(predData[[i]][,.(Id,Response)],paste(c("pred.wip.001-4-2.",i,".csv"),sep="",collapse = ""), row.names = FALSE)
-  write.csv(submitData[[i]][,.(Id,Response)],paste(c("submit.wip.001-4-2.",i,".csv"),sep="",collapse = ""), row.names = FALSE)
+  write.csv(predData[[i]][,.(Id,Response)],paste(c("pred.wip.001-4-4.",i,".csv"),sep="",collapse = ""), row.names = FALSE)
+  write.csv(submitData[[i]][,.(Id,Response)],paste(c("submit.wip.001-4-4.",i,".csv"),sep="",collapse = ""), row.names = FALSE)
 
   options(scipen = 0)
 }
@@ -175,7 +175,7 @@ combinedSubmission[which(combinedPred>thr)] = 1
 combinedSubmitData = as.data.table(cbind(test.num_Id,combinedSubmission))
 setnames(combinedSubmitData,c("Id","Response"))
 options(scipen = 999)
-write.csv(combinedSubmitData[,.(Id,Response)],paste(c("submit.wip.001-4-3.","MEAN",".csv"),sep="",collapse = ""), row.names = FALSE)
+write.csv(combinedSubmitData[,.(Id,Response)],paste(c("submit.wip.001-4-4.","MEAN",".csv"),sep="",collapse = ""), row.names = FALSE)
 options(scipen = 0)
 
 }
