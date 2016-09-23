@@ -6,4 +6,5 @@ data/.DS_Store
 R/output.R.txt
 R/*.swp
 R\*.swp
-
+*.rds
+R/output.R.txt
