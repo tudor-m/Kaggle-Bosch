@@ -10,7 +10,7 @@ library(stringi)
 source("futil.R")
 
 VERBOSE = 1
-#sink(file="output.R.txt",append = TRUE, split=TRUE)
+sink(file="output.R.txt",append = FALSE, split=TRUE)
 timestamp()
 
 train.num.plant = getDataT("train","train.num.plant")
@@ -53,10 +53,9 @@ fit.dev.xgb.model=list()
 # remove(train.num);
 gc()
 
-for (thr in seq(0.35,0.45,0.01))
+for (thr in seq(0.30,0.30,0.01))
 for (i in 1:1)
 {
-  print(thr)
 # Model1 XGB:
 # Data:
   if (i==1)
@@ -100,10 +99,11 @@ for (i in 1:1)
     err = as.numeric(errMeasure4(preds,labels,thr))
     return(list(metric="error",value=err))
   }
-  for (min_child_w in 2:2) {
-    for (max_d in 13:13) {
+  for (min_child_w in 1:1) {
+    for (max_d in 12:12) {
       print(c("max_d: ",max_d))
       print(c("min_child_weight: ",min_child_w))
+      print(thr)
       nround = 90
       param <- list(  
         #objective           = "multi:softprob", num_class = 4,
@@ -112,7 +112,7 @@ for (i in 1:1)
         booster             = "gbtree",
         #booster             = "gblinear",
         base_score          = 0.5,
-        eta                 = 0.01,#0.05, #0.02, # 0.06, #0.01,
+        eta                 = 0.05,#0.05, #0.02, # 0.06, #0.01,
         max_depth           = max_d, #changed from default of 8
         subsample           = 0.9, #0.9, # 0.7
         colsample_bytree    = 0.9, # 0.7
