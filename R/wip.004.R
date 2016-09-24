@@ -50,7 +50,7 @@ fit.dev.xgb.model=list()
 # remove(train.num);
 #gc()
 
-for (thr in seq(0.25,0.25,0.05))
+for (thr in seq(0.6,0.6,0.05))
 for (i in 1:1)
 {
 # Model1 XGB:
@@ -58,7 +58,7 @@ for (i in 1:1)
   if (i==1)
   {
     #train.num = fread('../data/train_numeric.csv',header = TRUE,nrows = numrows)
-    dtrain <- xgb.DMatrix(data = as.matrix(train.num1[,-c("Id","Response"),with=F]), label=train.num1$Response, missing = NA)
+    dtrain <- xgb.DMatrix(data = as.matrix(train.num2[,-c("Id","Response"),with=F]), label=train.num2$Response, missing = NA)
     dtest  <- xgb.DMatrix(data = as.matrix(train.num3[,-c("Id","Response"),with=F]), label=train.num3$Response, missing = NA)
     #remove(train.num);
     #gc()
@@ -108,6 +108,7 @@ for (i in 1:1)
 # Model:
 fit.dev.xgb.model[[i]] = fit.dev
 }
+
 
 remove(dtrain)
 remove(dtest)
