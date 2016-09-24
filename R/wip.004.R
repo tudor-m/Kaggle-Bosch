@@ -50,7 +50,7 @@ fit.dev.xgb.model=list()
 # remove(train.num);
 #gc()
 
-for (thr in seq(0.6,0.6,0.05))
+for (thr in seq(0.25,0.75,0.1))
 for (i in 1:1)
 {
 # Model1 XGB:
@@ -72,12 +72,12 @@ for (i in 1:1)
     err = as.numeric(errMeasure4(preds,labels,thr))
     return(list(metric="error",value=err))
   }
-  for (min_child_w in 13:13) {
-    for (max_d in 13:13) {
+  for (min_child_w in seq(21,29,4)) {
+    for (max_d in seq(21,29,4)) {
       print(c("max_d: ",max_d))
       print(c("min_child_weight: ",min_child_w))
       print(thr)
-      nround = 90
+      nround = 80
       param <- list(  
         #objective           = "multi:softprob", num_class = 4,
         objective           = "binary:logistic",
@@ -85,7 +85,7 @@ for (i in 1:1)
         booster             = "gbtree",
         #booster             = "gblinear",
         base_score          = 0.5,
-        eta                 = 0.02,#0.05, #0.02, # 0.06, #0.01,
+        eta                 = 0.05,#0.05, #0.02, # 0.06, #0.01,
         max_depth           = max_d, #changed from default of 8
         subsample           = 0.9, #0.9, # 0.7
         colsample_bytree    = 0.9, # 0.7
@@ -103,8 +103,8 @@ for (i in 1:1)
       )
     set.seed(100)
     fit.dev = xgb.train(params=param,dtrain,nrounds=nround,print.every.n = 2,maximize = FALSE,watchlist)
+    }
   }
-}
 # Model:
 fit.dev.xgb.model[[i]] = fit.dev
 }
