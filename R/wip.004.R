@@ -27,33 +27,30 @@ train.num = fread('../data/train_numeric.csv',header = TRUE,nrows = numrows)
 #test.cat = fread('../data/test_categorical.csv',header = TRUE,nrows = numrows)
 #test.dat = fread('../data/test_date.csv',header = TRUE,nrows = numrows)
 
-#idxrows = 1:100000
-idxrows = which(train.num.plant$L1==1 & train.num.plant$L0==0 & train.num.plant$L2==0 & train.num.plant$L4==0)
-idxcols = 169:681 #L1 related
+idxrows1 = 1:200000
+idxrows2 = subSample(train.num$Response[idxrows1],5,1000)
+idxrows3 = 200001:400000
+#idxrows = which(train.num.plant$L1==1 & train.num.plant$L0==0 & train.num.plant$L2==0 & train.num.plant$L4==0)
+#idxcols = 169:681 #L1 related
 
-train.num = train.num[idxrows,]
-train.num = train.num[,idxcols,with=FALSE]
-#train.num = cbind(train.cat.plant[idxrows,],train.num,train.num.plant[idxrows,])
-train.num$Id = NULL
-train.num$Response = train.num.response[idxrows]
-nr = nrow(train.num)
-nr1 = round(0.5*nr)
+train.num1 = train.num[idxrows1,]
+train.num2 = train.num[idxrows2,] # subsampled
+train.num3 = train.num[idxrows3,] # cv
+
+train.num1$Response = train.num.response[idxrows1]
+train.num2$Response = train.num.response[idxrows2]
+train.num3$Response = train.num.response[idxrows3]
+
+remove(train.num);
+gc()
 
 set.seed(100)
 
-rIndex = sample(nr,nr)
-rIndex1 = rIndex[1:nr1]
-rIndex2 = rIndex[(nr1+1):nr]
-
-rIndex = sample(nr,nr)
-rIndex3 = rIndex[1:nr1]
-rIndex4 = rIndex[(nr1+1):nr]
-
 fit.dev.xgb.model=list()
 # remove(train.num);
-gc()
+#gc()
 
-for (thr in seq(0.30,0.30,0.01))
+for (thr in seq(0.25,0.25,0.05))
 for (i in 1:1)
 {
 # Model1 XGB:
@@ -61,36 +58,12 @@ for (i in 1:1)
   if (i==1)
   {
     #train.num = fread('../data/train_numeric.csv',header = TRUE,nrows = numrows)
-    dtrain <- xgb.DMatrix(data = as.matrix(train.num[rIndex1,][,-c("Id","Response"),with=F]), label=train.num$Response[rIndex1], missing = NA)
-    dtest <- xgb.DMatrix(data = as.matrix(train.num[rIndex2,][,-c("Id","Response"),with=F]), label=train.num$Response[rIndex2], missing = NA)
+    dtrain <- xgb.DMatrix(data = as.matrix(train.num1[,-c("Id","Response"),with=F]), label=train.num1$Response, missing = NA)
+    dtest  <- xgb.DMatrix(data = as.matrix(train.num3[,-c("Id","Response"),with=F]), label=train.num3$Response, missing = NA)
     #remove(train.num);
     #gc()
   }
-  if (i==2)
-  {
-    #train.num = fread('../data/train_numeric.csv',header = TRUE,nrows = numrows)
-    dtrain <- xgb.DMatrix(data = as.matrix(train.num[rIndex2,][,-c("Id","Response"),with=F]), label=train.num$Response[rIndex2], missing = NA)
-    dtest <- xgb.DMatrix(data = as.matrix(train.num[rIndex1,][,-c("Id","Response"),with=F]), label=train.num$Response[rIndex1], missing = NA)
-    #remove(train.num);
-    #gc()
-  }
-  if (i==3)
-  {
-    #train.num = fread('../data/train_numeric.csv',header = TRUE,nrows = numrows)
-    dtrain <- xgb.DMatrix(data = as.matrix(train.num[rIndex3,][,-c("Id","Response"),with=F]), label=train.num$Response[rIndex3], missing = NA)
-    dtest <- xgb.DMatrix(data = as.matrix(train.num[rIndex4,][,-c("Id","Response"),with=F]), label=train.num$Response[rIndex4], missing = NA)
-    #remove(train.num);
-    #gc()
-  }
-  if (i==4)
-  {
-    #train.num = fread('../data/train_numeric.csv',header = TRUE,nrows = numrows)
-    dtrain <- xgb.DMatrix(data = as.matrix(train.num[rIndex4,][,-c("Id","Response"),with=F]), label=train.num$Response[rIndex4], missing = NA)
-    dtest <- xgb.DMatrix(data = as.matrix(train.num[rIndex3,][,-c("Id","Response"),with=F]), label=train.num$Response[rIndex3], missing = NA)
-    #remove(train.num);
-    #gc()
-  }
-  
+
   # Fit:
   watchlist <- list(train = dtrain, test = dtest)
   mccEval <- function(preds, dtrain)
@@ -99,8 +72,8 @@ for (i in 1:1)
     err = as.numeric(errMeasure4(preds,labels,thr))
     return(list(metric="error",value=err))
   }
-  for (min_child_w in 1:1) {
-    for (max_d in 12:12) {
+  for (min_child_w in 13:13) {
+    for (max_d in 13:13) {
       print(c("max_d: ",max_d))
       print(c("min_child_weight: ",min_child_w))
       print(thr)
@@ -112,7 +85,7 @@ for (i in 1:1)
         booster             = "gbtree",
         #booster             = "gblinear",
         base_score          = 0.5,
-        eta                 = 0.05,#0.05, #0.02, # 0.06, #0.01,
+        eta                 = 0.02,#0.05, #0.02, # 0.06, #0.01,
         max_depth           = max_d, #changed from default of 8
         subsample           = 0.9, #0.9, # 0.7
         colsample_bytree    = 0.9, # 0.7

@@ -65,6 +65,8 @@ for (L in 0:4)
 saveDataT(train.num.plant,"train","train.num.plant")
 train.num.response = train.num$Response
 saveDataT(train.num.response,"train","train.num.response")
+train.num.Id = train.num$Id
+saveDataT(train.num.Id,"train","train.num.Id")
 remove(train.num)
 remove(line.group.train)
 gc()

@@ -103,10 +103,17 @@ lines_and_stations <- function(object)
   return(as.data.frame(lns))
 }
 
-
-
-
-
-
-
-
+subSample <- function(response,ratio,seed)
+{
+  # eliminate negative (=0) resp elements
+  # resulted ratio 0 to 1
+  # started with random seed
+  # returns the index of remaining elements in response
+  p_index = which(response==1)
+  n_index = which(response==0)
+  p_count = sum(response == 1)
+  n_count_final = round(p_count*ratio)
+  set.seed(seed=seed)
+  n_index_final = sample(n_index,n_count_final)
+  return(sort(c(n_index_final,p_index)))
+}
