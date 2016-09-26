@@ -1,0 +1,25 @@
+idxrows2 = subSample(train.num$Response[idxrows1],2,1000)
+> train.num3$Id[idxtmp1]
+[1] 1000857 1001113 1001484 1001585 1001735
+> train.num3$Id[idxtmp2]
+[1] 1000685 1000857 1000897 1001458 1001459 1001580 1001735
+
+
+idxrows2 = subSample(train.num$Response[idxrows1],2,2000)
+> train.num3$Id[idxtmp1]
+[1] 1000857 1001113 1001484 1001585 1001735
+> train.num3$Id[idxtmp2]
+[1] 1000685 1000857 1000897 1001458 1001459 1001580 1001735 1001791
+
+
+idxrows2 = subSample(train.num$Response[idxrows1],2,3000)
+seed 3000:
+> train.num3$Id[idxtmp1]
+[1] 1000857 1001113 1001484 1001585 1001735
+> train.num3$Id[idxtmp2]
+[1] 1000685 1000857 1000897 1001458 1001459 1001580 1001735 1001791
+
+
+Id: 1002321, Response = 1
+Id: 1002322, Response = 0   very little difference, Why ?
+

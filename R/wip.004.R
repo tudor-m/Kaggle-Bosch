@@ -1,6 +1,11 @@
+for (rat in seq(5,5,1))
+{
+  sink()
+  
+
 if (1 == 1)
 {
-  rm(list=ls())
+  rm(list=setdiff(ls(),"rat"))
   gc()
 }
 
@@ -9,13 +14,13 @@ library(xgboost)
 library(stringi)
 source("futil.R")
 
-VERBOSE = 1
-sink(file="output.R.txt",append = FALSE, split=TRUE)
+  VERBOSE = 1
+sink(file="output.R.txt",append = TRUE, split=TRUE)
 timestamp()
 
 train.num.plant = getDataT("train","train.num.plant")
 train.num.response = getDataT("train","train.num.response")
-train.cat.plant = getDataT("train","train.cat.plant")
+#train.cat.plant = getDataT("train","train.cat.plant")
 
 # Modelling
 numrows = -1;
@@ -28,7 +33,13 @@ train.num = fread('../data/train_numeric.csv',header = TRUE,nrows = numrows)
 #test.dat = fread('../data/test_date.csv',header = TRUE,nrows = numrows)
 
 idxrows1 = 1:200000
-idxrows2 = subSample(train.num$Response[idxrows1],5,1000)
+idxrows2 = subSample(train.num$Response[idxrows1],2,1000)
+#idxrows2 = subSample(train.num$Response[idxrows1],2,2000)
+#idxrows2 = subSample(train.num$Response[idxrows1],2,3000)
+#idxrows2 = subSample(train.num$Response[idxrows1],rat,3000)
+print(c("rat = ",rat))
+#idxrows2 = subSample(train.num$Response[idxrows1],5,1000)
+#idxrows3 = 500001:nrow(train.num)
 idxrows3 = 200001:400000
 #idxrows = which(train.num.plant$L1==1 & train.num.plant$L0==0 & train.num.plant$L2==0 & train.num.plant$L4==0)
 #idxcols = 169:681 #L1 related
@@ -37,9 +48,22 @@ train.num1 = train.num[idxrows1,]
 train.num2 = train.num[idxrows2,] # subsampled
 train.num3 = train.num[idxrows3,] # cv
 
+train.num2.std = train.num2; for (j in 2:(ncol(train.num2)-1)) {train.num2.std[[j]] = std3T(unlist(train.num2[,j,with=FALSE]))}
+train.num3.std = train.num3; for (j in 2:(ncol(train.num3)-1)) {train.num3.std[[j]] = std3T(unlist(train.num3[,j,with=FALSE]))}
+
+train.num2.std$Response = train.num.response[idxrows2]
+train.num3.std$Response = train.num.response[idxrows3]
+train.num2.std$Id = train.num2$Id[idxrows2]
+train.num3.std$Id = train.num3$Id[idxrows3]
+
 train.num1$Response = train.num.response[idxrows1]
 train.num2$Response = train.num.response[idxrows2]
 train.num3$Response = train.num.response[idxrows3]
+
+remove(train.num1)
+remove(train.num2)
+remove(train.num3)
+gc()
 
 remove(train.num);
 gc()
@@ -50,7 +74,7 @@ fit.dev.xgb.model=list()
 # remove(train.num);
 #gc()
 
-for (thr in seq(0.25,0.75,0.1))
+for (thr in seq(0.65,0.65,0.1))
 for (i in 1:1)
 {
 # Model1 XGB:
@@ -58,8 +82,13 @@ for (i in 1:1)
   if (i==1)
   {
     #train.num = fread('../data/train_numeric.csv',header = TRUE,nrows = numrows)
-    dtrain <- xgb.DMatrix(data = as.matrix(train.num2[,-c("Id","Response"),with=F]), label=train.num2$Response, missing = NA)
-    dtest  <- xgb.DMatrix(data = as.matrix(train.num3[,-c("Id","Response"),with=F]), label=train.num3$Response, missing = NA)
+
+      # dtrain <- xgb.DMatrix(data = as.matrix(train.num2[,-c("Id","Response"),with=F]), label=train.num2$Response, missing = NA)
+      # dtest  <- xgb.DMatrix(data = as.matrix(train.num3[,-c("Id","Response"),with=F]), label=train.num3$Response, missing = NA)
+
+      dtrain <- xgb.DMatrix(data = as.matrix(train.num2.std[,-c("Id","Response"),with=F]), label=train.num2.std$Response, missing = NA)
+      dtest  <- xgb.DMatrix(data = as.matrix(train.num3.std[,-c("Id","Response"),with=F]), label=train.num3.std$Response, missing = NA)
+
     #remove(train.num);
     #gc()
   }
@@ -72,12 +101,12 @@ for (i in 1:1)
     err = as.numeric(errMeasure4(preds,labels,thr))
     return(list(metric="error",value=err))
   }
-  for (min_child_w in seq(21,29,4)) {
-    for (max_d in seq(21,29,4)) {
+  for (min_child_w in seq(13,29,4)) {
+    for (max_d in seq(13,29,4)) {
       print(c("max_d: ",max_d))
       print(c("min_child_weight: ",min_child_w))
       print(thr)
-      nround = 80
+      nround = 40
       param <- list(  
         #objective           = "multi:softprob", num_class = 4,
         objective           = "binary:logistic",
@@ -109,6 +138,37 @@ for (i in 1:1)
 fit.dev.xgb.model[[i]] = fit.dev
 }
 
+# Predict:
+pred_dev = list()
+for (i in 1:length(fit.dev.xgb.model))
+{
+  pred_dev[[i]] = predict(fit.dev.xgb.model[[i]],as.matrix(train.num3[,-c("Id","Response"),with=F]),missing = NA)
+}
+
+# Predict (std) :
+pred_dev = list()
+for (i in 1:length(fit.dev.xgb.model))
+{
+  pred_dev[[i]] = predict(fit.dev.xgb.model[[i]],as.matrix(train.num3.std[,-c("Id","Response"),with=F]),missing = NA)
+}
+
+thr
+print(errMeasure4(pred_dev[[1]],train.num3$Response,thr))
+idxtmp1 = which(train.num3$Response[1:1000] > 0.5) # responses
+idxtmp2 = which(pred_dev[[1]][1:1000] > thr)      # predicted
+print(c("positives: ",train.num3$Id[idxtmp1]))
+print(c("predicted: ",train.num3$Id[idxtmp2]))
+print(c("error:     ",errMeasure4(pred_dev[[1]][1:1000],train.num3$Response[1:1000],thr)))
+
+thr
+print(errMeasure4(pred_dev[[1]],train.num3.std$Response,thr))
+idxtmp1 = which(train.num3.std$Response[1:1000] > 0.5) # responses
+idxtmp2 = which(pred_dev[[1]][1:1000] > thr)      # predicted
+print(c("positives: ",train.num3.std$Id[idxtmp1]))
+print(c("predicted: ",train.num3.std$Id[idxtmp2]))
+print(c("error:     ",errMeasure4(pred_dev[[1]][1:1000],train.num3.std$Response[1:1000],thr)))
+
+}
 
 remove(dtrain)
 remove(dtest)
