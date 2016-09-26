@@ -8,3 +8,4 @@ R/*.swp
 R\*.swp
 *.rds
 R/output.R.txt
+r/.Rhistory
