@@ -18,12 +18,13 @@ source("futil.R")
 sink(file="output.R.txt",append = TRUE, split=TRUE)
 timestamp()
 
-train.num.plant = getDataT("train","train.num.plant")
+#train.num.plant = getDataT("train","train.num.plant")
 train.num.response = getDataT("train","train.num.response")
 #train.cat.plant = getDataT("train","train.cat.plant")
 
 # Modelling
 numrows = -1;
+numrows = 400000;
 # Load all the input file:
 train.num = fread('../data/train_numeric.csv',header = TRUE,nrows = numrows)
 #train.cat = fread('../data/train_categorical.csv',header = TRUE,nrows = numrows)
@@ -33,10 +34,10 @@ train.num = fread('../data/train_numeric.csv',header = TRUE,nrows = numrows)
 #test.dat = fread('../data/test_date.csv',header = TRUE,nrows = numrows)
 
 idxrows1 = 1:200000
-idxrows2 = subSample(train.num$Response[idxrows1],2,1000)
+#idxrows2 = subSample(train.num$Response[idxrows1],2,1000)
 #idxrows2 = subSample(train.num$Response[idxrows1],2,2000)
 #idxrows2 = subSample(train.num$Response[idxrows1],2,3000)
-#idxrows2 = subSample(train.num$Response[idxrows1],rat,3000)
+idxrows2 = subSample(train.num$Response[idxrows1],rat,3000)
 print(c("rat = ",rat))
 #idxrows2 = subSample(train.num$Response[idxrows1],5,1000)
 #idxrows3 = 500001:nrow(train.num)
@@ -48,17 +49,17 @@ train.num1 = train.num[idxrows1,]
 train.num2 = train.num[idxrows2,] # subsampled
 train.num3 = train.num[idxrows3,] # cv
 
-train.num2.std = train.num2; for (j in 2:(ncol(train.num2)-1)) {train.num2.std[[j]] = std3T(unlist(train.num2[,j,with=FALSE]))}
-train.num3.std = train.num3; for (j in 2:(ncol(train.num3)-1)) {train.num3.std[[j]] = std3T(unlist(train.num3[,j,with=FALSE]))}
-
-train.num2.std$Response = train.num.response[idxrows2]
-train.num3.std$Response = train.num.response[idxrows3]
-train.num2.std$Id = train.num2$Id[idxrows2]
-train.num3.std$Id = train.num3$Id[idxrows3]
-
 train.num1$Response = train.num.response[idxrows1]
 train.num2$Response = train.num.response[idxrows2]
 train.num3$Response = train.num.response[idxrows3]
+
+train.num2.std = train.num2; for (j in 2:(ncol(train.num2)-1)) {train.num2.std[[j]] = std3T(unlist(train.num2[,j,with=FALSE]))}
+train.num3.std = train.num3; for (j in 2:(ncol(train.num3)-1)) {train.num3.std[[j]] = std3T(unlist(train.num3[,j,with=FALSE]))}
+
+train.num2.std$Response = train.num2$Response
+train.num3.std$Response = train.num3$Response
+train.num2.std$Id = train.num2$Id
+train.num3.std$Id = train.num3$Id
 
 remove(train.num1)
 remove(train.num2)
@@ -85,7 +86,7 @@ for (i in 1:1)
 
       # dtrain <- xgb.DMatrix(data = as.matrix(train.num2[,-c("Id","Response"),with=F]), label=train.num2$Response, missing = NA)
       # dtest  <- xgb.DMatrix(data = as.matrix(train.num3[,-c("Id","Response"),with=F]), label=train.num3$Response, missing = NA)
-
+      set.seed(100)
       dtrain <- xgb.DMatrix(data = as.matrix(train.num2.std[,-c("Id","Response"),with=F]), label=train.num2.std$Response, missing = NA)
       dtest  <- xgb.DMatrix(data = as.matrix(train.num3.std[,-c("Id","Response"),with=F]), label=train.num3.std$Response, missing = NA)
 
@@ -101,8 +102,8 @@ for (i in 1:1)
     err = as.numeric(errMeasure4(preds,labels,thr))
     return(list(metric="error",value=err))
   }
-  for (min_child_w in seq(13,29,4)) {
-    for (max_d in seq(13,29,4)) {
+  for (min_child_w in seq(29,29,4)) {
+    for (max_d in seq(29,29,4)) {
       print(c("max_d: ",max_d))
       print(c("min_child_weight: ",min_child_w))
       print(thr)
@@ -139,10 +140,13 @@ fit.dev.xgb.model[[i]] = fit.dev
 }
 
 # Predict:
+if (1==0)
+{
 pred_dev = list()
 for (i in 1:length(fit.dev.xgb.model))
 {
   pred_dev[[i]] = predict(fit.dev.xgb.model[[i]],as.matrix(train.num3[,-c("Id","Response"),with=F]),missing = NA)
+}
 }
 
 # Predict (std) :
@@ -152,21 +156,30 @@ for (i in 1:length(fit.dev.xgb.model))
   pred_dev[[i]] = predict(fit.dev.xgb.model[[i]],as.matrix(train.num3.std[,-c("Id","Response"),with=F]),missing = NA)
 }
 
-thr
-print(errMeasure4(pred_dev[[1]],train.num3$Response,thr))
-idxtmp1 = which(train.num3$Response[1:1000] > 0.5) # responses
-idxtmp2 = which(pred_dev[[1]][1:1000] > thr)      # predicted
-print(c("positives: ",train.num3$Id[idxtmp1]))
-print(c("predicted: ",train.num3$Id[idxtmp2]))
-print(c("error:     ",errMeasure4(pred_dev[[1]][1:1000],train.num3$Response[1:1000],thr)))
+if (1==0)
+{
+  print(c("thr = ",thr))
+  print(errMeasure4(pred_dev[[1]],train.num3$Response,thr))
+  idxtmp1 = which(train.num3$Response[1:1000] > 0.5) # responses
+  idxtmp2 = which(pred_dev[[1]][1:1000] > thr)      # predicted
+  print(c("positives: ",train.num3$Id[idxtmp1]))
+  print(c("predicted: ",train.num3$Id[idxtmp2]))
+  print(c("error:     ",errMeasure4(pred_dev[[1]][1:1000],train.num3$Response[1:1000],thr)))
+}
 
-thr
-print(errMeasure4(pred_dev[[1]],train.num3.std$Response,thr))
-idxtmp1 = which(train.num3.std$Response[1:1000] > 0.5) # responses
-idxtmp2 = which(pred_dev[[1]][1:1000] > thr)      # predicted
-print(c("positives: ",train.num3.std$Id[idxtmp1]))
-print(c("predicted: ",train.num3.std$Id[idxtmp2]))
-print(c("error:     ",errMeasure4(pred_dev[[1]][1:1000],train.num3.std$Response[1:1000],thr)))
+if (1 == 1)
+for (thr in seq(0.65,0.65,0.05))
+{
+  print(c("thr = ",thr))
+  print(errMeasure4(pred_dev[[1]],train.num3.std$Response,thr))
+  idxtmp0 = 1:20000
+  idxtmp1 = which(train.num3.std$Response[idxtmp0] > 0.5) # responses
+  idxtmp2 = which(pred_dev[[1]][idxtmp0] > thr)      # predicted
+  print(c("positives: ",train.num3.std$Id[idxtmp1]))
+  print(c("predicted: ",train.num3.std$Id[idxtmp2]))
+  print("intersect: ");print(intersect(idxtmp1,idxtmp2))
+  print(c("error:     ",errMeasure4(pred_dev[[1]][idxtmp0],train.num3.std$Response[idxtmp0],thr)))
+}
 
 }
 

@@ -117,3 +117,28 @@ subSample <- function(response,ratio,seed)
   n_index_final = sample(n_index,n_count_final)
   return(sort(c(n_index_final,p_index)))
 }
+
+std3T <- function(inval)
+{
+  # Returns for each element of inval:
+  # 0 if N/A
+  # 1 if it's in the 1st standard deviation
+  # 2 if it's in the 2nd standard deviation
+  # 3 if it's in the 3rd standard deviation
+  s = sd(inval,na.rm = TRUE)
+  m = mean(inval,na.rm = TRUE)
+  outval = -5+0*inval
+  idx = which(inval >= m-2*s)
+  outval[idx] = -2
+  idx = which(inval >= m-s)
+  outval[idx] = -1
+  idx = which(inval >= m)
+  outval[idx] = 1
+  idx = which(inval >= m+s)
+  outval[idx] = 2
+  idx = which(inval >= m+2*s)
+  outval[idx] = 5
+  idx = which(is.na(inval))
+  outval[idx] = 0
+  return(outval)
+}

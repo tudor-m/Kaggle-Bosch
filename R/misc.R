@@ -9,28 +9,7 @@ for (j in 2:ncol(train.num3))
 
 a = c(1,2,3,4,8:20,seq(20,-5,-1))
 
-std3T <- function(inval)
-{
-  # Returns for each element of inval:
-  # 0 if N/A
-  # 1 if it's in the 1st standard deviation
-  # 2 if it's in the 2nd standard deviation
-  # 3 if it's in the 3rd standard deviation
-  s = sd(inval,na.rm = TRUE)
-  m = mean(inval,na.rm = TRUE)
-  outval = 3+0*inval
-  idx = which(inval >= m-2*s)
-  outval[idx] = 2
-  idx = which(inval >= m-s)
-  outval[idx] = 1
-  idx = which(inval >= m+s)
-  outval[idx] = 2
-  idx = which(inval >= m+2*s)
-  outval[idx] = 3
-  idx = which(is.na(inval))
-  outval[idx] = 0
-  return(outval)
-}
+
 
 b=std3T(a)
 
