@@ -127,7 +127,9 @@ std3T <- function(inval)
   # 3 if it's in the 3rd standard deviation
   s = sd(inval,na.rm = TRUE)
   m = mean(inval,na.rm = TRUE)
-  outval = -5+0*inval
+  outval = -10+0*inval
+  idx = which(inval >= m-3*s)
+  outval[idx] = -10
   idx = which(inval >= m-2*s)
   outval[idx] = -2
   idx = which(inval >= m-s)
@@ -137,7 +139,9 @@ std3T <- function(inval)
   idx = which(inval >= m+s)
   outval[idx] = 2
   idx = which(inval >= m+2*s)
-  outval[idx] = 5
+  outval[idx] = 10
+  idx = which(inval >= m+3*s)
+  outval[idx] = 10
   idx = which(is.na(inval))
   outval[idx] = 0
   return(outval)

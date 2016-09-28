@@ -29,4 +29,7 @@ Error in xy.coords(x, y, xlabel, ylabel, log) :
 plot(apply(train.num3.std[1:5000],MARGIN = 1,function(x) {sum(x==3)}),rnorm(5000,1,0.1)*(1+train.num3.std[1:5000,]$Response))
 plot(apply(train.num2.std,MARGIN = 1,function(x) {sum(x==3)}),rnorm(nrow(train.num2.std),1,0.2)*(1+train.num2.std$Response))
 
+m=kmeans(train.num3.plant[,-c("Id"),with=FALSE],centers = 20,algorithm="Lloyd",iter.max=100)
+plot(km$cluster,rnorm(nrow(train.num3.plant),0,0.1)+train.num3.std$Response)
+
      
