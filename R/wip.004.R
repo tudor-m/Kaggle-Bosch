@@ -2,12 +2,12 @@ for (rat in seq(5,5,1))
 {
   sink()
   
-
 if (1 == 1)
 {
   rm(list=setdiff(ls(),"rat"))
   gc()
 }
+
 
 #kod = "simple"
 kod = "std"
