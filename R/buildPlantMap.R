@@ -78,7 +78,7 @@ gc()
 
 # Map the train categorical ids to the plant elements (lines and stations):
 line.group.train = list()
-train.cat = fread('../data/train_categorical.csv',header = TRUE,nrows = -1,data.table=FALSE)
+train.cat = fread('../data/train_categorical.csv',header = TRUE,nrows = -1,data.table=TRUE)
 gc()
 train.cat.plant = data.table(Id=train.cat$Id)
 for (L in lines_seq)
