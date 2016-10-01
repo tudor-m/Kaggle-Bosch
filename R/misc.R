@@ -29,7 +29,52 @@ Error in xy.coords(x, y, xlabel, ylabel, log) :
 plot(apply(train.num3.std[1:5000],MARGIN = 1,function(x) {sum(x==3)}),rnorm(5000,1,0.1)*(1+train.num3.std[1:5000,]$Response))
 plot(apply(train.num2.std,MARGIN = 1,function(x) {sum(x==3)}),rnorm(nrow(train.num2.std),1,0.2)*(1+train.num2.std$Response))
 
-m=kmeans(train.num3.plant[,-c("Id"),with=FALSE],centers = 20,algorithm="Lloyd",iter.max=100)
+km=kmeans(train.num3.plant[,-c("Id"),with=FALSE],centers = 20,algorithm="Lloyd",iter.max=100)
+train.num3.plant[which(km$cluster==13),2:40,with=FALSE]
 plot(km$cluster,rnorm(nrow(train.num3.plant),0,0.1)+train.num3.std$Response)
+plot(km$cluster,rnorm(nrow(train.num3.plant),0,0.1)+train.num3.std$Response)
+plot(km$cluster,rnorm(nrow(train.num3.plant),0,0.1)+train.num3.std$Response)
+idxc = which(km$cluster==1)
 
-     
+
+idxclist = list()
+for (i4 in 0:1)
+  for (i3 in 0:1)
+    for (i2 in 0:1)
+      for (i1 in 0:1)
+        for (i0 in 0:1)
+        {
+          idxc = which(
+                        train.num.plant[,2,with=FALSE]==i0 & 
+                        train.num.plant[,3,with=FALSE]==i1 & 
+                        train.num.plant[,4,with=FALSE]==i2 & 
+                        train.num.plant[,5,with=FALSE]==i3 &
+                        train.num.plant[,6,with=FALSE]==i4)
+          if (length(idxc) != 0)
+          {
+            cname = as.character(i0+2*i1+4*i2+8*i3+16*i4)
+            idxclist[[cname]] = idxc
+            print(c(i0,i1,i2,i3,i4))
+            print(cname)
+            print(c(length(idxc),sum(train.num.response[idxc]),sum(train.num.response[idxc])/length(idxc)))
+          }
+        }
+
+# num columns:
+l0numCols = 2:169
+l1numCols = 170:682
+l2numCols = 683:724
+l3numCols = 725:999
+
+# L3 products:
+rows_c = idxclist[["8"]]
+cols_c = 
+
+
+
+
+km = kmeans(train.num[idxclist[["15"]],-c("Id","Response"),with=FALSE],centers = 4,algorithm="Lloyd",iter.max=100)
+
+
+
+

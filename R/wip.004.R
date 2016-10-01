@@ -11,7 +11,7 @@ if (1 == 1)
 
 #kod = "simple"
 kod = "std"
-  
+
 library(data.table)
 library(xgboost)
 library(stringi)
@@ -21,17 +21,18 @@ source("futil.R")
 sink(file="output.R.txt",append = TRUE, split=TRUE)
 timestamp()
 
-#train.num.plant = getDataT("train","train.num.plant")
+train.num.plant = getDataT("train","train.num.plant")
 train.num.response = getDataT("train","train.num.response")
 #train.cat.plant = getDataT("train","train.cat.plant")
 
 # Modelling
 numrows = -1;
+#numrows = 1000;
 numrows = 300000;
 # Load all the input file:
 train.num = fread('../data/train_numeric.csv',header = TRUE,nrows = numrows)
-#train.cat = fread('../data/train_categorical.csv',header = TRUE,nrows = numrows)
-#train.dat = fread('../data/train_date.csv',header = TRUE,nrows = numrows)
+train.cat = fread('../data/train_categorical.csv',header = TRUE,nrows = numrows)
+train.dat = fread('../data/train_date.csv',header = TRUE,nrows = numrows)
 #test.num = fread('../data/test_numeric.csv',header = TRUE,nrows = numrows)
 #test.cat = fread('../data/test_categorical.csv',header = TRUE,nrows = numrows)
 #test.dat = fread('../data/test_date.csv',header = TRUE,nrows = numrows)
@@ -53,17 +54,24 @@ train.num1 = train.num[idxrows1,]
 train.num2 = train.num[idxrows2,] # subsampled
 train.num3 = train.num[idxrows3,] # cv
 
+train.num1.plant = train.num.plant[idxrows1]
+train.num2.plant = train.num.plant[idxrows2]
+train.num3.plant = train.num.plant[idxrows3]
+
 train.num1$Response = train.num.response[idxrows1]
 train.num2$Response = train.num.response[idxrows2]
 train.num3$Response = train.num.response[idxrows3]
 
 if (kod == "std")
 {
+  train.num1.std = train.num1; for (j in 2:(ncol(train.num1)-1)) {train.num1.std[[j]] = std3T(unlist(train.num1[,j,with=FALSE]))}
   train.num2.std = train.num2; for (j in 2:(ncol(train.num2)-1)) {train.num2.std[[j]] = std3T(unlist(train.num2[,j,with=FALSE]))}
   train.num3.std = train.num3; for (j in 2:(ncol(train.num3)-1)) {train.num3.std[[j]] = std3T(unlist(train.num3[,j,with=FALSE]))}
 
+  train.num1.std$Response = train.num1$Response
   train.num2.std$Response = train.num2$Response
   train.num3.std$Response = train.num3$Response
+  train.num1.std$Id = train.num1$Id
   train.num2.std$Id = train.num2$Id
   train.num3.std$Id = train.num3$Id
 
@@ -74,9 +82,40 @@ if (kod == "std")
 }
 
 
+remove(train.num.plant)
 remove(train.num);
 gc()
 
+
+if (kod1 == "cluster")
+{
+  #km=kmeans(train.num1.plant[,-c("Id","Response"),with=FALSE],centers = 10,algorithm="Lloyd",iter.max=100)
+  #km=kmeans(train.num1.plant[,2:59,with=FALSE],centers = 10,algorithm="Lloyd",iter.max=100)
+  km=kmeans(train.num1.plant[,2:6,with=FALSE],centers = 10,algorithm="Lloyd",iter.max=100)
+  plot(km$cluster,rnorm(nrow(train.num1.plant),0,0.1)+train.num1.std$Response)
+
+  km=kmeans(train.num.plant[,2:6,with=FALSE],centers = 10,algorithm="Lloyd",iter.max=100)
+  plot(km$cluster,rnorm(nrow(train.num.plant),0,0.1)+train.num.response)
+  
+  for (jj in 1:length(km$size))
+  {
+    idxc = which(km$cluster == jj)
+    centrec = as.data.frame(colMeans(train.num1.std[idxc,-c("Id","Response"),with=FALSE],na.rm = TRUE ))
+    dlist = list()
+    for (ii in idxc)
+    {
+      r = train.num1.std[ii,-c("Id","Response"),with=FALSE]
+      d = dist(t(cbind(centrec,t(r))),method = "euclidian")
+      dlist = append(dlist,d[[1]])
+    }
+  }
+  plot(unlist(dlist),rnorm(length(idxc),0,0.1)+train.num1.std[idxc,]$Response)
+  
+  train.num1.plant[which(km$cluster==13),2:40,with=FALSE]
+  plot(km$cluster,rnorm(nrow(train.num3.plant),0,0.1)+train.num3.std$Response)
+  plot(km$cluster,rnorm(nrow(train.num3.plant),0,0.1)+train.num3.std$Response)
+  idxc = which(km$cluster==1)
+}
 set.seed(100)
 
 fit.dev.xgb.model=list()

@@ -29,12 +29,14 @@ remove(train.num,train.cat,train.dat)
 remove(test.num,test.cat,test.dat)
 gc()
 
+lines_seq = 0:3
+stations_seq = 0:51
 
 # Map the train numerical ids to the plant elements (lines and stations):
 line.group.train = list()
 train.num = fread('../data/train_numeric.csv',header = TRUE,nrows = -1)
 train.num.plant = data.table(Id=train.num$Id)
-for (L in 0:4)
+for (L in lines_seq)
 {
   Lname = paste(c("L",L),collapse="")
   cols = which(L == lns[["train.num"]]$lines)
@@ -42,7 +44,7 @@ for (L in 0:4)
   train.num.plant[[Lname]] = 0
   train.num.plant[[Lname]][rows] = 1
 }
-for (S in 0:51)
+for (S in stations_seq)
 {
   Sname = paste(c("S",S),collapse="")
   cols = which(S == lns[["train.num"]]$stations)
@@ -50,8 +52,8 @@ for (S in 0:51)
   train.num.plant[[Sname]] = 0
   train.num.plant[[Sname]][rows] = 1
 }
-for (L in 0:4)
-  for (S in 0:51)
+for (L in lines_seq)
+  for (S in stations_seq)
   {
     Lname = paste(c("L",L),collapse="")
     Sname = paste(c("S",S),collapse="")
@@ -66,33 +68,39 @@ saveDataT(train.num.plant,"train","train.num.plant")
 train.num.response = train.num$Response
 saveDataT(train.num.response,"train","train.num.response")
 train.num.Id = train.num$Id
-saveDataT(train.num.Id,"train","train.num.Id")
+saveDataT(train.num.Id,"train","train.num.id")
 remove(train.num)
 remove(line.group.train)
+remove(train.num.plant)
+remove(train.num.response)
+remove(train.num.Id)
 gc()
 
-# Map the train/test categorical ids to the plant elements (lines and stations):
+# Map the train categorical ids to the plant elements (lines and stations):
 line.group.train = list()
-train.cat = fread('../data/train_categorical.csv',header = TRUE,nrows = -1)
+train.cat = fread('../data/train_categorical.csv',header = TRUE,nrows = -1,data.table=FALSE)
+gc()
 train.cat.plant = data.table(Id=train.cat$Id)
-for (L in 0:4)
+for (L in lines_seq)
 {
   Lname = paste(c("L",L),collapse="")
   cols = which(L == lns[["train.cat"]]$lines)
   rows = which(apply(train.cat[,cols,with=F],MARGIN = 1, function(x) length(x)!=sum(is.na(x))))
   train.cat.plant[[Lname]] = 0
   train.cat.plant[[Lname]][rows] = 1
+  gc()
 }
-for (S in 0:51)
+for (S in stations_seq)
 {
   Sname = paste(c("S",S),collapse="")
   cols = which(S == lns[["train.cat"]]$stations)
   rows = which(apply(train.cat[,cols,with=F],MARGIN = 1, function(x) length(x)!=sum(is.na(x))))
   train.cat.plant[[Sname]] = 0
   train.cat.plant[[Sname]][rows] = 1
+  gc()
 }
-for (L in 0:4)
-  for (S in 0:51)
+for (L in lines_seq)
+  for (S in stations_seq)
   {
     Lname = paste(c("L",L),collapse="")
     Sname = paste(c("S",S),collapse="")
@@ -102,6 +110,7 @@ for (L in 0:4)
     rows = which(apply(train.cat[,cols,with=F],MARGIN = 1, function(x) length(x)!=sum(is.na(x))))
     train.cat.plant[[LSname]] = 0
     train.cat.plant[[LSname]][rows] = 1
+    gc()
   }
 saveDataT(train.cat.plant,"train","train.cat.plant")
 remove(train.cat)
@@ -111,7 +120,7 @@ gc()
 line.group.test = list()
 test.num = fread('../data/test_numeric.csv',header = TRUE,nrows = -1)
 test.num.plant = data.table(Id=test.num$Id)
-for (L in 0:4)
+for (L in lines_seq)
 {
   Lname = paste(c("L",L),collapse="")
   cols = which(L == lns[["test.num"]]$lines)
@@ -119,7 +128,7 @@ for (L in 0:4)
   test.num.plant[[Lname]] = 0
   test.num.plant[[Lname]][rows] = 1
 }
-for (S in 0:51)
+for (S in stations_seq)
 {
   Sname = paste(c("S",S),collapse="")
   cols = which(S == lns[["test.num"]]$stations)
@@ -127,8 +136,8 @@ for (S in 0:51)
   test.num.plant[[Sname]] = 0
   test.num.plant[[Sname]][rows] = 1
 }
-for (L in 0:4)
-  for (S in 0:51)
+for (L in lines_seq)
+  for (S in stations_seq)
   {
     Lname = paste(c("L",L),collapse="")
     Sname = paste(c("S",S),collapse="")
