@@ -85,7 +85,13 @@ for (L in lines_seq)
 {
   Lname = paste(c("L",L),collapse="")
   cols = which(L == lns[["train.cat"]]$lines)
-  rows = which(apply(train.cat[,cols,with=F],MARGIN = 1, function(x) length(x)!=sum(is.na(x))))
+  rows = 0*vector(length=nrow(train.cat))
+  for ( j in 1:nrow(train.cat))
+  {
+    tmp = train.cat[j,cols,with=FALSE]
+    if (length(cols) != sum(is.na(tmp)))
+      rows[j] = 1
+  }
   train.cat.plant[[Lname]] = 0
   train.cat.plant[[Lname]][rows] = 1
   gc()
