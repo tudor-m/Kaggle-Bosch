@@ -38,7 +38,6 @@ idxc = which(km$cluster==1)
 
 
 idxclist = list()
-for (i4 in 0:1)
   for (i3 in 0:1)
     for (i2 in 0:1)
       for (i1 in 0:1)
@@ -48,13 +47,12 @@ for (i4 in 0:1)
                         train.num.plant[,2,with=FALSE]==i0 & 
                         train.num.plant[,3,with=FALSE]==i1 & 
                         train.num.plant[,4,with=FALSE]==i2 & 
-                        train.num.plant[,5,with=FALSE]==i3 &
-                        train.num.plant[,6,with=FALSE]==i4)
+                        train.num.plant[,5,with=FALSE]==i3)
           if (length(idxc) != 0)
           {
-            cname = as.character(i0+2*i1+4*i2+8*i3+16*i4)
+            cname = as.character(i0+2*i1+4*i2+8*i3)
             idxclist[[cname]] = idxc
-            print(c(i0,i1,i2,i3,i4))
+            print(c(i0,i1,i2,i3))
             print(cname)
             print(c(length(idxc),sum(train.num.response[idxc]),sum(train.num.response[idxc])/length(idxc)))
           }
@@ -64,11 +62,11 @@ for (i4 in 0:1)
 l0numCols = 2:169
 l1numCols = 170:682
 l2numCols = 683:724
-l3numCols = 725:999
+l3numCols = 725:969
 
 # L3 products:
 rows_c = idxclist[["8"]]
-cols_c = 
+cols_c = l3numCols
 
 
 
