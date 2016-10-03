@@ -1,23 +1,24 @@
 for (rat in seq(5,5,1))
 {
+  rat = 5
   sink()
   
+
 if (1 == 1)
 {
   rm(list=setdiff(ls(),"rat"))
   gc()
 }
 
-
 #kod = "simple"
 kod = "std"
-
+kod1 = "non-cluster"
 library(data.table)
 library(xgboost)
 library(stringi)
 source("futil.R")
 
-  VERBOSE = 1
+VERBOSE = 1
 sink(file="output.R.txt",append = TRUE, split=TRUE)
 timestamp()
 
@@ -30,9 +31,9 @@ numrows = -1;
 #numrows = 1000;
 numrows = 300000;
 # Load all the input file:
-train.num = fread('../data/train_numeric.csv',header = TRUE,nrows = numrows)
-train.cat = fread('../data/train_categorical.csv',header = TRUE,nrows = numrows)
-train.dat = fread('../data/train_date.csv',header = TRUE,nrows = numrows)
+#train.num = fread('../data/train_numeric.csv',header = TRUE,nrows = numrows)
+#train.cat = fread('../data/train_categorical.csv',header = TRUE,nrows = numrows)
+#train.dat = fread('../data/train_date.csv',header = TRUE,nrows = numrows)
 #test.num = fread('../data/test_numeric.csv',header = TRUE,nrows = numrows)
 #test.cat = fread('../data/test_categorical.csv',header = TRUE,nrows = numrows)
 #test.dat = fread('../data/test_date.csv',header = TRUE,nrows = numrows)
@@ -41,7 +42,8 @@ idxrows1 = 1:200000
 #idxrows2 = subSample(train.num$Response[idxrows1],2,1000)
 #idxrows2 = subSample(train.num$Response[idxrows1],2,2000)
 #idxrows2 = subSample(train.num$Response[idxrows1],2,3000)
-idxrows2 = subSample(train.num$Response[idxrows1],rat,3000)
+train.num.response = getDataT("train","train.num.response")
+idxrows2 = subSample(train.num.response[idxrows1],rat,3000)
 print(c("rat = ",rat))
 #idxrows2 = subSample(train.num$Response[idxrows1],5,1000)
 #idxrows3 = 500001:nrow(train.num)
@@ -50,34 +52,34 @@ idxrows3 = 200001:300000
 #idxrows = which(train.num.plant$L1==1 & train.num.plant$L0==0 & train.num.plant$L2==0 & train.num.plant$L4==0)
 #idxcols = 169:681 #L1 related
 
-train.num1 = train.num[idxrows1,]
-train.num2 = train.num[idxrows2,] # subsampled
-train.num3 = train.num[idxrows3,] # cv
-
 train.num1.plant = train.num.plant[idxrows1]
 train.num2.plant = train.num.plant[idxrows2]
 train.num3.plant = train.num.plant[idxrows3]
+if (kod=="simple")
+{
+  train.num1 = train.num[idxrows1,]
+  train.num2 = train.num[idxrows2,] # subsampled
+  train.num3 = train.num[idxrows3,] # cv
 
-train.num1$Response = train.num.response[idxrows1]
-train.num2$Response = train.num.response[idxrows2]
-train.num3$Response = train.num.response[idxrows3]
+  train.num1$Response = train.num.response[idxrows1]
+  train.num2$Response = train.num.response[idxrows2]
+  train.num3$Response = train.num.response[idxrows3]
+}
 
 if (kod == "std")
 {
-  train.num1.std = train.num1; for (j in 2:(ncol(train.num1)-1)) {train.num1.std[[j]] = std3T(unlist(train.num1[,j,with=FALSE]))}
-  train.num2.std = train.num2; for (j in 2:(ncol(train.num2)-1)) {train.num2.std[[j]] = std3T(unlist(train.num2[,j,with=FALSE]))}
-  train.num3.std = train.num3; for (j in 2:(ncol(train.num3)-1)) {train.num3.std[[j]] = std3T(unlist(train.num3[,j,with=FALSE]))}
+  
+  #train.num1.std = train.num1; for (j in 2:(ncol(train.num1)-1)) {train.num1.std[[j]] = std3T(unlist(train.num1[,j,with=FALSE]))}
+  #train.num2.std = train.num2; for (j in 2:(ncol(train.num2)-1)) {train.num2.std[[j]] = std3T(unlist(train.num2[,j,with=FALSE]))}
+  #train.num3.std = train.num3; for (j in 2:(ncol(train.num3)-1)) {train.num3.std[[j]] = std3T(unlist(train.num3[,j,with=FALSE]))}
+  
+  train.num.std = getDataT("train","train.num.std")
 
-  train.num1.std$Response = train.num1$Response
-  train.num2.std$Response = train.num2$Response
-  train.num3.std$Response = train.num3$Response
-  train.num1.std$Id = train.num1$Id
-  train.num2.std$Id = train.num2$Id
-  train.num3.std$Id = train.num3$Id
-
-  remove(train.num1)
-  remove(train.num2)
-  remove(train.num3)
+  train.num1.std = train.num.std[idxrows1]
+  train.num2.std = train.num.std[idxrows2]
+  train.num3.std = train.num.std[idxrows3]
+  
+  remove(train.num.std)
   gc()
 }
 
@@ -158,7 +160,7 @@ for (i in 1:1)
       print(c("max_d: ",max_d))
       print(c("min_child_weight: ",min_child_w))
       print(thr)
-      nround = 40
+      nround = 1200
       param <- list(  
         #objective           = "multi:softprob", num_class = 4,
         objective           = "binary:logistic",
