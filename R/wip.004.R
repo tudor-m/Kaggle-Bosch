@@ -31,13 +31,15 @@ numrows = -1;
 #numrows = 1000;
 numrows = 300000;
 # Load all the input file:
-#train.num = fread('../data/train_numeric.csv',header = TRUE,nrows = numrows)
+if (kod == "simple")
+{
+train.num = fread('../data/train_numeric.csv',header = TRUE,nrows = numrows)
 #train.cat = fread('../data/train_categorical.csv',header = TRUE,nrows = numrows)
 #train.dat = fread('../data/train_date.csv',header = TRUE,nrows = numrows)
 #test.num = fread('../data/test_numeric.csv',header = TRUE,nrows = numrows)
 #test.cat = fread('../data/test_categorical.csv',header = TRUE,nrows = numrows)
 #test.dat = fread('../data/test_date.csv',header = TRUE,nrows = numrows)
-
+}
 idxrows1 = 1:200000
 #idxrows2 = subSample(train.num$Response[idxrows1],2,1000)
 #idxrows2 = subSample(train.num$Response[idxrows1],2,2000)
@@ -78,6 +80,38 @@ if (kod == "std")
   train.num1.std = train.num.std[idxrows1]
   train.num2.std = train.num.std[idxrows2]
   train.num3.std = train.num.std[idxrows3]
+  remove(train.num.std)
+  gc()
+  
+  # for now change some values:
+  from1 = -10
+  to1 = -100
+  from2 = 10
+  to2 = 100
+  for (j in 2:(ncol(train.num1.std)-1))
+  {
+    print(j)
+    idxtmp = which(train.num1.std[[j]] == from1)
+    train.num1.std[[j]][idxtmp] = to1
+    idxtmp = which(train.num1.std[[j]] == from2)
+    train.num1.std[[j]][idxtmp] = to2
+  }
+  for (j in 2:(ncol(train.num2.std)-1))
+  {
+    print(j)
+    idxtmp = which(train.num2.std[[j]] == from1)
+    train.num2.std[[j]][idxtmp] = to1
+    idxtmp = which(train.num2.std[[j]] == from2)
+    train.num2.std[[j]][idxtmp] = to2
+  }
+  for (j in 2:(ncol(train.num3.std)-1))
+  {
+    print(j)
+    idxtmp = which(train.num3.std[[j]] == from1)
+    train.num3.std[[j]][idxtmp] = to1
+    idxtmp = which(train.num3.std[[j]] == from2)
+    train.num3.std[[j]][idxtmp] = to2
+  }
   
   remove(train.num.std)
   gc()
@@ -124,7 +158,7 @@ fit.dev.xgb.model=list()
 # remove(train.num);
 #gc()
 
-for (thr in seq(0.65,0.65,0.1))
+for (thr in seq(0.6,0.6,0.05))
 for (i in 1:1)
 {
 # Model1 XGB:
@@ -141,6 +175,7 @@ for (i in 1:1)
     if (kod == "std")
     {
       dtrain <- xgb.DMatrix(data = as.matrix(train.num2.std[,-c("Id","Response"),with=F]), label=train.num2.std$Response, missing = NA)
+      #dtrain <- xgb.DMatrix(data = as.matrix(train.num1.std[,-c("Id","Response"),with=F]), label=train.num1.std$Response, missing = NA)
       dtest  <- xgb.DMatrix(data = as.matrix(train.num3.std[,-c("Id","Response"),with=F]), label=train.num3.std$Response, missing = NA)
     }
     #remove(train.num);
@@ -155,12 +190,12 @@ for (i in 1:1)
     err = as.numeric(errMeasure4(preds,labels,thr))
     return(list(metric="error",value=err))
   }
-  for (min_child_w in seq(29,29,4)) {
-    for (max_d in seq(29,29,4)) {
+  for (min_child_w in seq(10,10,2)) {
+    for (max_d in seq(50,50,2)) {
       print(c("max_d: ",max_d))
       print(c("min_child_weight: ",min_child_w))
       print(thr)
-      nround = 1200
+      nround = 100
       param <- list(  
         #objective           = "multi:softprob", num_class = 4,
         objective           = "binary:logistic",
@@ -231,7 +266,7 @@ if (kod == "simple")
 }
 
 if (kod == "std")
-for (thr in seq(0.65,0.65,0.05))
+for (thr in seq(0.6,0.6,0.05))
 {
   print(c("thr = ",thr))
   print(errMeasure4(pred_dev[[1]],train.num3.std$Response,thr))

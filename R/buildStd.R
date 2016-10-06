@@ -15,11 +15,16 @@ train.num = fread('../data/train_numeric.csv',header = TRUE,nrows = numrows)
 test.num = fread('../data/test_numeric.csv',header = TRUE,nrows = numrows)
 
 
-for (j in 2:(ncol(train.num)-1))
+ntn = ncol(train.num)-1
+for (j in 2:ntn)
 {
-  tmp = std3T(rbind(unlist(train.num[,j,with=FALSE]),unlist(test.num[,j,with=FALSE])))
+  #tmp = std3T(rbind(unlist(train.num[,j,with=FALSE]),unlist(test.num[,j,with=FALSE])))
+  tmpCol = c(train.num[[j]],test.num[[j]])
+  tmp = std3T((tmpCol))
+  #tmp = std3T(c(unlist(train.num[,j,with=FALSE]),unlist(test.num[,j,with=FALSE])))
   train.num[[j]] = tmp[1:nrow(train.num)]
   test.num[[j]] = tmp[(1+nrow(train.num)):(nrow(train.num)+nrow(test.num))]
+  print(j)
 }
 
 saveDataT(train.num,"train","train.num.std")
