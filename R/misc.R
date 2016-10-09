@@ -73,6 +73,8 @@ cols_c = l3numCols
 
 km = kmeans(train.num[idxclist[["15"]],-c("Id","Response"),with=FALSE],centers = 4,algorithm="Lloyd",iter.max=100)
 
-
+Major breakout I would say, the plots show almost 0 presence of positives for x>1500
+> plot(rowSums(abs(train.num3.std[,2:969,with=FALSE])),train.num3.std$Response+rnorm(nrow(train.num3.std),mean=0,sd=0.1))
+> plot(rowSums(abs(train.num1.std[,2:969,with=FALSE])),train.num1.std$Response+rnorm(nrow(train.num1.std),mean=0,sd=0.1))
 
 

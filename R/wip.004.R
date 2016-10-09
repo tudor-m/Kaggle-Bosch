@@ -12,6 +12,7 @@ if (1 == 1)
 
 #kod = "simple"
 kod = "std"
+kod = "simple+std"
 kod1 = "non-cluster"
 library(data.table)
 library(xgboost)
@@ -29,7 +30,7 @@ train.num.response = getDataT("train","train.num.response")
 # Modelling
 numrows = -1;
 #numrows = 1000;
-numrows = 300000;
+numrows = 500000;
 # Load all the input file:
 if (kod == "simple")
 {
@@ -40,7 +41,7 @@ train.num = fread('../data/train_numeric.csv',header = TRUE,nrows = numrows)
 #test.cat = fread('../data/test_categorical.csv',header = TRUE,nrows = numrows)
 #test.dat = fread('../data/test_date.csv',header = TRUE,nrows = numrows)
 }
-idxrows1 = 1:200000
+idxrows1 = 1:300000
 #idxrows2 = subSample(train.num$Response[idxrows1],2,1000)
 #idxrows2 = subSample(train.num$Response[idxrows1],2,2000)
 #idxrows2 = subSample(train.num$Response[idxrows1],2,3000)
@@ -50,9 +51,10 @@ print(c("rat = ",rat))
 #idxrows2 = subSample(train.num$Response[idxrows1],5,1000)
 #idxrows3 = 500001:nrow(train.num)
 #idxrows3 = 200001:700000
-idxrows3 = 200001:300000
+idxrows3 = 300001:500000
 #idxrows = which(train.num.plant$L1==1 & train.num.plant$L0==0 & train.num.plant$L2==0 & train.num.plant$L4==0)
 #idxcols = 169:681 #L1 related
+idxrows4 = 500001:700000
 
 train.num1.plant = train.num.plant[idxrows1]
 train.num2.plant = train.num.plant[idxrows2]
@@ -116,8 +118,6 @@ if (kod == "std")
   remove(train.num.std)
   gc()
 }
-
-
 remove(train.num.plant)
 remove(train.num);
 gc()
@@ -178,6 +178,11 @@ for (i in 1:1)
       #dtrain <- xgb.DMatrix(data = as.matrix(train.num1.std[,-c("Id","Response"),with=F]), label=train.num1.std$Response, missing = NA)
       dtest  <- xgb.DMatrix(data = as.matrix(train.num3.std[,-c("Id","Response"),with=F]), label=train.num3.std$Response, missing = NA)
     }
+    if (kod=="simple+std")
+    {
+      dtrain <- xgb.DMatrix(data = cbind(as.matrix(train.num2[,-c("Id","Response"),with=F]),as.matrix(train.num2.std[,-c("Id","Response"),with=F])), label=train.num2$Response, missing = NA)
+      dtest  <- xgb.DMatrix(data = cbind(as.matrix(train.num3[,-c("Id","Response"),with=F]),as.matrix(train.num3.std[,-c("Id","Response"),with=F])), label=train.num3$Response, missing = NA)
+    }
     #remove(train.num);
     #gc()
   }
@@ -225,6 +230,99 @@ for (i in 1:1)
   }
 # Model:
 fit.dev.xgb.model[[i]] = fit.dev
+}
+
+
+# Use the model to split data in 2 (positives and negatives), then further refine each half:
+for (i in 1:1)
+{
+  mdl = fit.dev.xgb.model[[i]]
+  pred_dev_mdl = predict(mdl,as.matrix(train.num3.std[,-c("Id","Response"),with=F]),missing = NA)
+  
+  idx_0 = which(pred_dev_mdl <= 0.65)
+  idx_1 = which(pred_dev_mdl >  0.65)
+  
+  train.num = fread('../data/train_numeric.csv',header = TRUE,nrows = numrows)
+  train.num3 = train.num[idxrows3]
+  remove(train.num)
+  gc()
+  train.num3.0 = train.num3[idx_0,]
+  train.num3.1 = train.num3[idx_1,]
+  
+  for (thr in seq(0.6,0.6,0.05))
+    for (i in 1:1)
+    {
+      # Model1 XGB:
+      # Data:
+      kod = "simple"
+      if (i==1)
+      {
+        #train.num = fread('../data/train_numeric.csv',header = TRUE,nrows = numrows)
+        set.seed(100)
+        if (kod=="simple")
+        {
+          dtrain <- xgb.DMatrix(data = as.matrix(train.num3.0[,-c("Id","Response"),with=F]), label=train.num3.0$Response, missing = NA)
+          dtest  <- xgb.DMatrix(data = as.matrix(train.num3[,-c("Id","Response"),with=F]), label=train.num3$Response, missing = NA)
+        }
+        if (kod == "std")
+        {
+          dtrain <- xgb.DMatrix(data = as.matrix(train.num3.0.std[,-c("Id","Response"),with=F]), label=train.num2.std$Response, missing = NA)
+          #dtrain <- xgb.DMatrix(data = as.matrix(train.num1.std[,-c("Id","Response"),with=F]), label=train.num1.std$Response, missing = NA)
+          dtest  <- xgb.DMatrix(data = as.matrix(train.num3.std[,-c("Id","Response"),with=F]), label=train.num3.std$Response, missing = NA)
+        }
+        #remove(train.num);
+        #gc()
+      }
+      
+      # Fit:
+      watchlist <- list(train = dtrain, test = dtest)
+      mccEval <- function(preds, dtrain)
+      {
+        labels = getinfo(dtrain, "label")
+        err = as.numeric(errMeasure4(preds,labels,thr))
+        return(list(metric="error",value=err))
+      }
+      for (min_child_w in seq(10,10,2)) {
+        for (max_d in seq(50,50,2)) {
+          print(c("max_d: ",max_d))
+          print(c("min_child_weight: ",min_child_w))
+          print(thr)
+          nround = 100
+          param <- list(  
+            #objective           = "multi:softprob", num_class = 4,
+            objective           = "binary:logistic",
+            #objective           = "reg:linear",
+            booster             = "gbtree",
+            #booster             = "gblinear",
+            base_score          = 0.5,
+            eta                 = 0.05,#0.05, #0.02, # 0.06, #0.01,
+            max_depth           = max_d, #changed from default of 8
+            subsample           = 0.9, #0.9, # 0.7
+            colsample_bytree    = 0.9, # 0.7
+            #num_parallel_tree   = 2,
+            nthread = 4,
+            alpha = 0,    #0.0001,
+            lambda = 0,
+            gamma = 0,
+            scale_pos_weight = 1,
+            min_child_weight    = min_child_w, #4, #4
+            eval_metric         = mccEval,
+            #eval_metric         = "rmse",
+            early_stopping_rounds    = 2,
+            maximize = TRUE
+          )
+          set.seed(100)
+          fit.dev = xgb.train(params=param,dtrain,nrounds=nround,print.every.n = 2,maximize = FALSE,watchlist)
+        }
+      }
+      # Model:
+      fit.dev.xgb.model[[i]] = fit.dev
+    }
+  
+  
+  
+  
+  
 }
 
 # Predict:
