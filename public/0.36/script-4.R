@@ -12,10 +12,10 @@ library(xgboost)
 library(matrixStats)
 
 # Define file paths
-date_csv <- "../input/train_date.csv"
-numeric_csv <- "../input/train_numeric.csv"
-test_date_csv <- "../input/test_date.csv"
-test_numeric_csv <- "../input/test_numeric.csv"
+date_csv <- "../data/train_date.csv"
+numeric_csv <- "../data/train_numeric.csv"
+test_date_csv <- "../data/test_date.csv"
+test_numeric_csv <- "../data/test_numeric.csv"
 
 # Parameters for Faron computation
 number_of_chunks <- 20
