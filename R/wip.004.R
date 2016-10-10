@@ -82,6 +82,18 @@ if (kod == "std")
   train.num1.std = train.num.std[idxrows1]
   train.num2.std = train.num.std[idxrows2]
   train.num3.std = train.num.std[idxrows3]
+  from1 = -10
+  to1 = -100
+  from2 = 10
+  to2 = 100
+  for (j in 2:(ncol(train.num.std)-1))
+  {
+    print(j)
+    idxtmp = which(train.num.std[[j]] == from1)
+    train.num.std[[j]][idxtmp] = to1
+    idxtmp = which(train.num.std[[j]] == from2)
+    train.num.std[[j]][idxtmp] = to2
+  }
   remove(train.num.std)
   gc()
   
