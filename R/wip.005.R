@@ -1,3 +1,89 @@
+# Initiate the tables:
+if (1 == 1)
+{
+  rm(list=setdiff(ls(),"rat"))
+  gc()
+}
+
+library(data.table)
+library(xgboost)
+library(stringi)
+source("futil.R")
+
+kod0 = "cv"
+
+numrows = -1;
+if (kod0 == "cv")
+{
+  rows1 = 1:200000
+  rows2 = 200001:300000
+  rows3 = 300001:500000
+  numrows = max(c(rows1,rows2,rows3))
+  train.num = fread('../data/train_numeric.csv',header = TRUE,nrows = numrows)
+  train.num1 = train.num[rows1,]
+  train.num2 = train.num[rows2,]
+  train.num3 = train.num[rows3,]
+  remove(train.num)
+  gc();
+}
+
+
+# Prep data for XGB:
+dtrain <- xgb.DMatrix(data = as.matrix(train.num1[,-c("Id","Response"),with=F]), label=train.num1$Response, missing = NA)
+dtest  <- xgb.DMatrix(data = as.matrix(train.num2[,-c("Id","Response"),with=F]), label=train.num2$Response, missing = NA)
+
+# Fit with xgb
+fit.dev.xgb.model[[i]] = fit.dev
+for (thr in seq(0.6,0.6,0.05))
+  for (i in 1:1)
+  {
+    watchlist <- list(train = dtrain, test = dtest)
+    mccEval <- function(preds, dtrain)
+    {
+      labels = getinfo(dtrain, "label")
+      err = as.numeric(errMeasure4(preds,labels,thr))
+      return(list(metric="error",value=err))
+    }
+    for (min_child_w in seq(10,10,2)) {
+      for (max_d in seq(15,15,2)) {
+        print(c("max_d: ",max_d))
+        print(c("min_child_weight: ",min_child_w))
+        print(thr)
+        nround = 100
+        param <- list(  
+          #objective           = "multi:softprob", num_class = 4,
+          objective           = "binary:logistic",
+          #objective           = "reg:linear",
+          booster             = "gbtree",
+          #booster             = "gblinear",
+          base_score          = 0.5,
+          eta                 = 0.05,#0.05, #0.02, # 0.06, #0.01,
+          max_depth           = max_d, #changed from default of 8
+          subsample           = 0.9, #0.9, # 0.7
+          colsample_bytree    = 0.9, # 0.7
+          #num_parallel_tree   = 2,
+          nthread = 4,
+          alpha = 0,    #0.0001,
+          lambda = 0,
+          gamma = 0,
+          scale_pos_weight = 1,
+          min_child_weight    = min_child_w, #4, #4
+          eval_metric         = mccEval,
+          #eval_metric         = "rmse",
+          early_stopping_rounds    = 2,
+          maximize = TRUE
+        )
+        set.seed(100)
+        fit.dev = xgb.train(params=param,dtrain,nrounds=nround,print.every.n = 2,maximize = FALSE,watchlist)
+      }
+    }
+    # Model array:
+    fit.dev.xgb.model[[i]] = fit.dev
+  }
+
+
+
+
 for (rat in seq(5,5,1))
 {
   rat = 5
