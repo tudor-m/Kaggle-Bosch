@@ -146,3 +146,10 @@ std3T <- function(inval)
   outval[idx] = 0
   return(outval)
 }
+
+dist1 <- function(v1,v2)
+{
+  v1[is.na(v1)] = 100
+  v2[is.na(v2)] = 100
+  sum(v1 != v2,na.rm = TRUE)
+}

@@ -11,14 +11,19 @@ library(stringi)
 source("futil.R")
 
 kod0 = "cv"
+kod = "std"
 
 numrows = -1;
 if (kod0 == "cv")
 {
-  rows1 = 1:200000
-  rows2 = 200001:300000
-  rows3 = 300001:500000
+  rows1 = 1:100000
+  rows2 = 100001:200000
+  rows3 = 200001:400000
   numrows = max(c(rows1,rows2,rows3))
+}
+
+if (kod == "normal")
+{
   train.num = fread('../data/train_numeric.csv',header = TRUE,nrows = numrows)
   train.num1 = train.num[rows1,]
   train.num2 = train.num[rows2,]
@@ -27,14 +32,23 @@ if (kod0 == "cv")
   gc();
 }
 
+if (kod=="std")
+{
+  train.num.std = getDataT("train","train.num.std")
+  train.num1 = train.num.std[rows1]
+  train.num2 = train.num.std[rows2]
+  train.num3 = train.num.std[rows3]
+  remove(train.num.std)
+  gc()
+}
 
-# Prep data for XGB:
+# Prep train data for XGB:
 dtrain <- xgb.DMatrix(data = as.matrix(train.num1[,-c("Id","Response"),with=F]), label=train.num1$Response, missing = NA)
 dtest  <- xgb.DMatrix(data = as.matrix(train.num2[,-c("Id","Response"),with=F]), label=train.num2$Response, missing = NA)
 
-# Fit with xgb
-fit.dev.xgb.model[[i]] = fit.dev
-for (thr in seq(0.6,0.6,0.05))
+# Fit train data xgb
+fit.dev.xgb.model = list()
+for (thr in seq(0.35,0.35,0.05))
   for (i in 1:1)
   {
     watchlist <- list(train = dtrain, test = dtest)
@@ -49,7 +63,7 @@ for (thr in seq(0.6,0.6,0.05))
         print(c("max_d: ",max_d))
         print(c("min_child_weight: ",min_child_w))
         print(thr)
-        nround = 100
+        nround = 50
         param <- list(  
           #objective           = "multi:softprob", num_class = 4,
           objective           = "binary:logistic",
@@ -81,6 +95,17 @@ for (thr in seq(0.6,0.6,0.05))
     fit.dev.xgb.model[[i]] = fit.dev
   }
 
+# Predict train.num3:
+pred.dev.xgb = list()
+for (i in 1:length(fit.dev.xgb.model))
+{
+  mdl_name = "i"
+  mdl = fit.dev.xgb.model[[i]]
+  pred = predict(mdl,as.matrix(train.num3[,-c("Id","Response"),with=F]),missing = NA)
+  errM = errMeasure4(pred,train.num3$Response,0.35)
+  print(errM)
+  pred.dev.xgb[[i]] = list(pred=pred,mdl_name=mdl_name,err=errM,mdl=mdl)
+}
 
 
 
