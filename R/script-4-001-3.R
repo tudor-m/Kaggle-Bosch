@@ -197,10 +197,10 @@ n_folds <- 5
 l = length(Y)
 #set.seed(100)
 #set.seed(200)
-#set.seed(300)
+set.seed(300)
 #set.seed(400)
 #set.seed(500)
-set.seed(600)
+#set.seed(600)
 folds = sample(1:l,round(l/n_folds))
 #folds <- createFolds(as.factor(Y), k = n_folds)
 valid <- folds
