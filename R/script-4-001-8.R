@@ -245,6 +245,77 @@ threshold_list[[is]] = threshold
 
 rm(X)
 
+#############################################################################
+####################### CV START ############################################
+#############################################################################
+
+# TRAIN
+print("Run model on train set")
+
+dt_date <- fread(date_csv, select = c(date_features))
+dt <- fread(numeric_csv, select = c(numeric_features))
+dt.response <- fread(numeric_csv, select = "Response")
+#dt <- fread(numeric_csv)
+Id <- dt$Id
+dt[ , Id := NULL]
+dt_date[ , Id := NULL]
+
+# clean numerics
+for(col in names(dt)) {
+  col_mean <- mean(dt[[col]], na.rm = TRUE)
+  set(dt, which(is.na(dt[[col]])), col, col_mean)
+}
+
+# clean date
+for(col in names(dt_date)) {
+  col_mean <- mean(dt_date[[col]], na.rm = TRUE)
+  set(dt_date, which(is.na(dt_date[[col]])), col, col_mean)
+}
+
+# combine
+dt <- cbind(dt, dt_date, dt_faron_train)
+rm(dt_date)
+rm(dt_faron_train)
+
+# sparsify
+X <- Matrix(as.matrix(dt), sparse = T)
+rm(dt)
+
+
+## 5: PREDICT
+## ==========
+dt_list = list()
+pred_list = list()
+predicted_response_list = list()
+for (im in 1:length(xgb_model_list))
+{
+  xgb_model = xgb_model_list[[im]]
+  threshold = threshold_list[[im]]
+  pred <- predict(xgb_model, X)
+  predicted_response <- (pred > quantile(pred, threshold)) * 1
+  dt <- data.table(Id = Id, Response = predicted_response)
+  pred_list[[im]] = pred
+  predicted_response_list[[im]] = predicted_response
+  dt_list[[im]] = dt
+}
+
+## Ensembling:
+pred_total = 0
+for (i in 1:length(pred_list))
+  pred_total = pred_total+pred_list[[i]]
+predicted_response_total = 0
+for (i in 1:length(predicted_response_list))
+  predicted_response_total = predicted_response_total+predicted_response_list[[i]]
+
+## 
+dt_ens = 0*predicted_response_total
+dt_ens[which(predicted_response_total>=3)] = 1
+dt <- data.table(Id=Id,Response = dt_ens)
+
+#############################################################################
+####################### CV END ##############################################
+#############################################################################
+
 # TEST
 print("Run model on test set")
 
