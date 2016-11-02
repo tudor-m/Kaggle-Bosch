@@ -2,7 +2,8 @@ library(data.table)
 source("futil.R")
 
 file_list = vector();
-file_list = append(file_list,"submission-script-001-94.3.csv") # PB: 0.39319
+file_list = append(file_list,"submission-script-001-94.3.csv")   # PB: 0.39319
+file_list = append(file_list,"submission-4-001-91.csv")          # PB: 0.39419
 #file_list = append(file_list,"submission-script-4-001-93.csv")
 #file_list = append(file_list,"submit.wip.001-2.MEAN.csv")
 #file_list = append(file_list,"./public/xgbsubmission08.csv")
