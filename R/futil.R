@@ -1,5 +1,9 @@
 library(moments)
 
+errMeasureRMSE <- function(v1,v2)
+{
+  sqrt(mean((v1 - v2)^2))
+}
 
 errMeasure <- function (vPred, vTarget)
 {
