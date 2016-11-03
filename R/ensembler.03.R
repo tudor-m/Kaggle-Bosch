@@ -10,7 +10,8 @@ file_list = append(file_list,"submission-4-001-91.csv")          # PB: 0.39419
 #file_list = append(file_list,"./public/xgbsubmission09.csv")
 #file_list = append(file_list,"./public/xgbsubmission10.csv")
 #file_list = append(file_list,"./public/xgbsubmission20.csv")
-file_list = append(file_list,"./public/xgbsubmission30.csv")
+file_list = append(file_list,"./public/0.40681/xgbsubmission30.csv")
+file_list = append(file_list,"./public/0.40367/xgbsubmission30.csv")
 
 pred_file_list = list()
 for ( i in 1:length(file_list))
