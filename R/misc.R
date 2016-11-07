@@ -77,4 +77,6 @@ Major breakout I would say, the plots show almost 0 presence of positives for x>
 > plot(rowSums(abs(train.num3.std[,2:969,with=FALSE])),train.num3.std$Response+rnorm(nrow(train.num3.std),mean=0,sd=0.1))
 > plot(rowSums(abs(train.num1.std[,2:969,with=FALSE])),train.num1.std$Response+rnorm(nrow(train.num1.std),mean=0,sd=0.1))
 
-
+importance <- xgb.importance(feature_names = names(train.num1), model = mdl)
+head(importance)
+ft = importance[1:10]$Feature

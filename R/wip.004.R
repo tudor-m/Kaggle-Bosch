@@ -10,10 +10,11 @@ if (1 == 1)
   gc()
 }
 
-#kod = "simple"
-kod = "std"
-kod = "simple+std"
+kod = "simple"
+#kod = "std"
+#kod = "simple+std"
 kod1 = "non-cluster"
+
 library(data.table)
 library(xgboost)
 library(stringi)
@@ -187,8 +188,9 @@ for (i in 1:1)
     if (kod == "std")
     {
       dtrain <- xgb.DMatrix(data = as.matrix(train.num2.std[,-c("Id","Response"),with=F]), label=train.num2.std$Response, missing = NA)
-      #dtrain <- xgb.DMatrix(data = as.matrix(train.num1.std[,-c("Id","Response"),with=F]), label=train.num1.std$Response, missing = NA)
       dtest  <- xgb.DMatrix(data = as.matrix(train.num3.std[,-c("Id","Response"),with=F]), label=train.num3.std$Response, missing = NA)
+      dtrain <- xgb.DMatrix(data = as.matrix(train.num2.std[,-c("Response"),with=F]), label=train.num2.std$Response, missing = NA)
+      dtest  <- xgb.DMatrix(data = as.matrix(train.num3.std[,-c("Response"),with=F]), label=train.num3.std$Response, missing = NA)
     }
     if (kod=="simple+std")
     {
@@ -279,7 +281,6 @@ for (i in 1:1)
         if (kod == "std")
         {
           dtrain <- xgb.DMatrix(data = as.matrix(train.num3.0.std[,-c("Id","Response"),with=F]), label=train.num2.std$Response, missing = NA)
-          #dtrain <- xgb.DMatrix(data = as.matrix(train.num1.std[,-c("Id","Response"),with=F]), label=train.num1.std$Response, missing = NA)
           dtest  <- xgb.DMatrix(data = as.matrix(train.num3.std[,-c("Id","Response"),with=F]), label=train.num3.std$Response, missing = NA)
         }
         #remove(train.num);

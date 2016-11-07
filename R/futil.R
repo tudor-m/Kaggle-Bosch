@@ -1,5 +1,9 @@
 library(moments)
 
+errMeasureRMSE <- function(v1,v2)
+{
+  sqrt(mean((v1 - v2)^2))
+}
 
 errMeasure <- function (vPred, vTarget)
 {
@@ -145,4 +149,11 @@ std3T <- function(inval)
   idx = which(is.na(inval))
   outval[idx] = 0
   return(outval)
+}
+
+dist1 <- function(v1,v2)
+{
+  v1[is.na(v1)] = 100
+  v2[is.na(v2)] = 100
+  sum(v1 != v2,na.rm = TRUE)
 }
