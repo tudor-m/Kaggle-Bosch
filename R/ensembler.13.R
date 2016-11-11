@@ -45,3 +45,12 @@ print("Store prediction")
 
 write.csv(dt, "submission.csv", row.names = F)
 
+
+# Load some predictions for analysis:
+some_pred = list()
+
+some_pred[[1]] = fread("submission-ensembler.10.csv",select = "Response")
+some_pred[[2]] = fread("submission-ensembler.11.csv",select = "Response")
+some_pred[[3]] = fread("submission-ensembler.12.csv",select = "Response")
+some_pred[[4]] = fread("submission-ensembler.13.csv",select = "Response")
+
